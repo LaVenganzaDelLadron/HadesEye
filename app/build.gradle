@@ -1,0 +1,62 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.google.gms.google.services)
+}
+
+android {
+    namespace 'com.project.hadeseye'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId "com.project.hadeseye"
+        minSdk 33
+        targetSdk 36
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.17.0'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'com.google.android.material:material:1.13.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
+
+    implementation 'io.github.tutorialsandroid:kalertdialog:20.4.8'
+    implementation 'com.github.TutorialsAndroid:progressx:v6.0.19'
+
+    implementation platform("com.google.firebase:firebase-bom:33.5.1") // latest as of Oct 2025
+    implementation "com.google.firebase:firebase-auth-ktx"
+
+    implementation "com.google.android.gms:play-services-auth:20.7.0" // match latest
+
+    implementation libs.androidx.credentials
+    implementation libs.androidx.credentials.play.services.auth
+    implementation libs.googleid
+    implementation libs.firebase.auth
+
+    testImplementation libs.junit
+    androidTestImplementation libs.androidx.junit
+    androidTestImplementation libs.androidx.espresso.core
+}
