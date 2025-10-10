@@ -1,26 +1,72 @@
 package com.project.hadeseye.fragments
 
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
+import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.provider.OpenableColumns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.Fragment
 import com.project.hadeseye.R
+import com.project.hadeseye.ResultScanActivity
+import com.project.hadeseye.controller.Scanning
+import com.project.hadeseye.dialog.ShowDialog
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [ScanFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class ScanFragment : Fragment() {
-    // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
+
+    private lateinit var viewFlipper: ViewFlipper
+    private val VIEW_FILE_SCAN = 0
+    private val VIEW_URL_SCAN = 1
+    private val VIEW_BREACH_SCAN = 2
+
+    private lateinit var btnAddFile: Button
+    private lateinit var btnScanUrl: Button
+    private lateinit var btnStartFile: Button
+    private lateinit var urlInput: EditText
+    private var selectedFileUri: Uri? = null
+
+
+    private val filePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            selectedFileUri = uri
+            val mimeType = requireContext().contentResolver.getType(uri)
+
+            when {
+                mimeType?.startsWith("image/") == true -> {
+                    val inputStream = requireContext().contentResolver.openInputStream(uri)
+                    val bitmap = BitmapFactory.decodeStream(inputStream)
+                    btnAddFile.text = ""
+                    btnAddFile.background = BitmapDrawable(resources, bitmap)
+                }
+
+                mimeType == "application/vnd.android.package-archive" -> {
+                    btnAddFile.setBackgroundResource(R.drawable.ic_apk)
+                    btnAddFile.text = ""
+                }
+
+                else -> {
+                    btnAddFile.setBackgroundResource(R.drawable.ic_file)
+                    btnAddFile.text = ""
+                }
+            }
+
+            Toast.makeText(requireContext(), "Selected: ${getFileName(uri)}", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(requireContext(), "No file selected", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,20 +80,150 @@ class ScanFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_scan, container, false)
+        val view = inflater.inflate(R.layout.fragment_scan, container, false)
+
+        val scanning = Scanning()
+        val showDialog = ShowDialog(requireContext())
+        viewFlipper = view.findViewById(R.id.viewFlipper)
+        viewFlipper.displayedChild = VIEW_FILE_SCAN
+
+        val scanFile = view.findViewById<Button>(R.id.btnFileScan)
+        val scanUrl = view.findViewById<Button>(R.id.btnUrlScan)
+        val scanBreach = view.findViewById<Button>(R.id.btnBreachCheck)
+        btnScanUrl = view.findViewById<Button>(R.id.btnStartUrlScan)
+        btnStartFile = view.findViewById<Button>(R.id.btnStartFileScan)
+
+        urlInput = view.findViewById(R.id.urlInput)
+        btnAddFile = view.findViewById(R.id.btnAddFile)
+
+
+        btnAddFile.setOnClickListener { pickFile() }
+
+        btnStartFile.setOnClickListener {
+            if (selectedFileUri == null) {
+                showDialog.invalidDialog("Error", "No file selected")
+                return@setOnClickListener
+            }
+
+            showDialog.loadingDialog("Just wait for a moment")
+            Thread {
+                try {
+                    val result = scanning.file_scan(requireContext(), selectedFileUri)
+
+                    val intent = Intent(requireContext(), ResultScanActivity::class.java)
+                    intent.putExtra("malicious", result["malicious"])
+                    intent.putExtra("harmless", result["harmless"])
+                    intent.putExtra("suspicious", result["suspicious"])
+                    intent.putExtra("undetected", result["undetected"])
+
+                    requireActivity().runOnUiThread {
+                        showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
+                        startActivity(intent)
+                    }
+
+                } catch (e: Exception) {
+                    requireActivity().runOnUiThread {
+                        showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
+                        Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }.start()
+
+
+        }
+
+        btnScanUrl.setOnClickListener {
+            val url = urlInput.text.toString().trim()
+            if (url.isEmpty()) {
+                showDialog.invalidDialog("Error", "URL cannot be empty")
+                return@setOnClickListener
+            }
+
+            showDialog.loadingDialog("Just wait for a moment")
+            Thread {
+                try {
+                    val result = scanning.url_scan(requireContext(), url)
+
+                    val intent = Intent(requireContext(), ResultScanActivity::class.java)
+                    intent.putExtra("malicious", result["malicious"])
+                    intent.putExtra("harmless", result["harmless"])
+                    intent.putExtra("suspicious", result["suspicious"])
+                    intent.putExtra("undetected", result["undetected"])
+
+                    requireActivity().runOnUiThread {
+                        showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
+                        startActivity(intent)
+                    }
+
+                } catch (e: Exception) {
+                    requireActivity().runOnUiThread {
+                        showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
+                        Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }.start()
+        }
+
+
+
+
+
+
+
+
+
+
+        scanFile.setOnClickListener {
+            if (viewFlipper.displayedChild != VIEW_FILE_SCAN) {
+                viewFlipper.displayedChild = VIEW_FILE_SCAN
+            }
+        }
+
+        scanUrl.setOnClickListener {
+            if (viewFlipper.displayedChild != VIEW_URL_SCAN) {
+                viewFlipper.displayedChild = VIEW_URL_SCAN
+            }
+        }
+
+        scanBreach.setOnClickListener {
+            if (viewFlipper.displayedChild != VIEW_BREACH_SCAN) {
+                viewFlipper.displayedChild = VIEW_BREACH_SCAN
+            }
+        }
+
+        return view
     }
 
+
+
+
+
+
+    private fun pickFile() {
+        filePickerLauncher.launch("*/*")
+    }
+    private fun getFileName(uri: Uri): String {
+        var result: String? = null
+        if (uri.scheme == "content") {
+            val cursor = requireContext().contentResolver.query(uri, null, null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    result = it.getString(it.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
+                }
+            }
+        }
+        if (result == null) {
+            result = uri.path
+            val cut = result?.lastIndexOf('/')
+            if (cut != -1 && result != null) {
+                result = result.substring(cut!! + 1)
+            }
+        }
+        return result ?: "unknown"
+    }
+
+
     companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment ScanFragment.
-         */
-        // TODO: Rename and change types and number of parameters
         @JvmStatic
         fun newInstance(param1: String, param2: String) =
             ScanFragment().apply {

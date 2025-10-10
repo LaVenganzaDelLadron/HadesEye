@@ -47,4 +47,11 @@ class ShowDialog(private val context: Context) {
             .show()
     }
 
+    fun loadingDialog(title: String): KAlertDialog {
+        val pDialog = KAlertDialog(context, KAlertDialog.PROGRESS_TYPE, isTrue)
+        pDialog.setTitleText(title)
+        pDialog.show()
+        return pDialog
+    }
+
 }
