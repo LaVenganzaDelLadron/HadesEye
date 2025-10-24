@@ -1,17 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-
-    <item android:title="Home"
+    <item
         android:id="@+id/home"
-        android:icon="@drawable/home_variant"/>
-    <item android:title="Scan"
+        android:icon="@drawable/nav_home_icon"
+        android:title="" />
+
+    <item
         android:id="@+id/scan"
-        android:icon="@drawable/skull_scan"/>
-    <item android:title="Report"
+        android:icon="@drawable/nav_scan_icon"
+        android:title="" />
+
+    <item
         android:id="@+id/report"
-        android:icon="@drawable/clipboard_text_clock"/>
-    <item android:title="Account"
+        android:icon="@drawable/nav_report_icon"
+        android:title="" />
+
+    <item
         android:id="@+id/account"
-        android:icon="@drawable/account_circle"/>
+        android:icon="@drawable/nav_account_icon"
+        android:title="" />
+
 </menu>

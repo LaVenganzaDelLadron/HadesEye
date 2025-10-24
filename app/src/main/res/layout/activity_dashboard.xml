@@ -33,10 +33,14 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@drawable/bottom_navigation_outline"
-        app:backgroundTint="@color/secondarycolor"
+        app:itemIconTint="@color/nav_item_color"
+        app:itemTextColor="@color/nav_item_color"
         app:menu="@menu/bottom_nav"
+        app:labelVisibilityMode="labeled"
+        app:backgroundTint="@color/secondarycolor"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

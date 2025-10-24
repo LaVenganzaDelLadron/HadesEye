@@ -14,7 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import com.project.hadeseye.R
 import com.project.hadeseye.ResultScanActivity
-import com.project.hadeseye.controller.Scanning
+import com.project.hadeseye.services.VTScanning
 import com.project.hadeseye.dialog.ShowDialog
 
 private const val ARG_PARAM1 = "param1"
@@ -34,6 +34,8 @@ class ScanFragment : Fragment() {
     private lateinit var btnStartFile: Button
     private lateinit var urlInput: EditText
     private var selectedFileUri: Uri? = null
+    lateinit var showDialog: ShowDialog
+    lateinit var vtScanning: VTScanning
 
 
     private val filePickerLauncher = registerForActivityResult(
@@ -82,8 +84,9 @@ class ScanFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_scan, container, false)
 
-        val scanning = Scanning()
-        val showDialog = ShowDialog(requireContext())
+        showDialog = ShowDialog(requireContext())
+        vtScanning = VTScanning()
+
         viewFlipper = view.findViewById(R.id.viewFlipper)
         viewFlipper.displayedChild = VIEW_FILE_SCAN
 
@@ -97,71 +100,17 @@ class ScanFragment : Fragment() {
         btnAddFile = view.findViewById(R.id.btnAddFile)
 
 
+
+
+
+
         btnAddFile.setOnClickListener { pickFile() }
 
         btnStartFile.setOnClickListener {
-            if (selectedFileUri == null) {
-                showDialog.invalidDialog("Error", "No file selected")
-                return@setOnClickListener
-            }
-
-            showDialog.loadingDialog("Just wait for a moment")
-            Thread {
-                try {
-                    val result = scanning.file_scan(requireContext(), selectedFileUri)
-
-                    val intent = Intent(requireContext(), ResultScanActivity::class.java)
-                    intent.putExtra("malicious", result["malicious"])
-                    intent.putExtra("harmless", result["harmless"])
-                    intent.putExtra("suspicious", result["suspicious"])
-                    intent.putExtra("undetected", result["undetected"])
-
-                    requireActivity().runOnUiThread {
-                        showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
-                        startActivity(intent)
-                    }
-
-                } catch (e: Exception) {
-                    requireActivity().runOnUiThread {
-                        showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
-                        Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                    }
-                }
-            }.start()
-
-
+            vtFileScan()
         }
-
         btnScanUrl.setOnClickListener {
-            val url = urlInput.text.toString().trim()
-            if (url.isEmpty()) {
-                showDialog.invalidDialog("Error", "URL cannot be empty")
-                return@setOnClickListener
-            }
-
-            showDialog.loadingDialog("Just wait for a moment")
-            Thread {
-                try {
-                    val result = scanning.url_scan(requireContext(), url)
-
-                    val intent = Intent(requireContext(), ResultScanActivity::class.java)
-                    intent.putExtra("malicious", result["malicious"])
-                    intent.putExtra("harmless", result["harmless"])
-                    intent.putExtra("suspicious", result["suspicious"])
-                    intent.putExtra("undetected", result["undetected"])
-
-                    requireActivity().runOnUiThread {
-                        showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
-                        startActivity(intent)
-                    }
-
-                } catch (e: Exception) {
-                    requireActivity().runOnUiThread {
-                        showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
-                        Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                    }
-                }
-            }.start()
+            vtScanUrl()
         }
 
 
@@ -178,13 +127,11 @@ class ScanFragment : Fragment() {
                 viewFlipper.displayedChild = VIEW_FILE_SCAN
             }
         }
-
         scanUrl.setOnClickListener {
             if (viewFlipper.displayedChild != VIEW_URL_SCAN) {
                 viewFlipper.displayedChild = VIEW_URL_SCAN
             }
         }
-
         scanBreach.setOnClickListener {
             if (viewFlipper.displayedChild != VIEW_BREACH_SCAN) {
                 viewFlipper.displayedChild = VIEW_BREACH_SCAN
@@ -193,6 +140,91 @@ class ScanFragment : Fragment() {
 
         return view
     }
+
+
+    private fun vtScanUrl() {
+        val url = urlInput.text.toString().trim()
+        if (url.isEmpty()) {
+            showDialog.invalidDialog("Error", "URL cannot be empty")
+        }
+
+        showDialog.loadingDialog("Just wait for a moment")
+        Thread {
+            try {
+                val result = vtScanning.url_scan(requireContext(), url)
+
+                val intent = Intent(requireContext(), ResultScanActivity::class.java)
+                intent.putExtra("malicious", result["malicious"])
+                intent.putExtra("harmless", result["harmless"])
+                intent.putExtra("suspicious", result["suspicious"])
+                intent.putExtra("undetected", result["undetected"])
+
+                requireActivity().runOnUiThread {
+                    showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
+                    startActivity(intent)
+                }
+
+            } catch (e: Exception) {
+                requireActivity().runOnUiThread {
+                    showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
+                    Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }.start()
+    }
+
+    private fun vtFileScan() {
+        if (selectedFileUri == null) {
+            showDialog.invalidDialog("Error", "No file selected")
+            return
+        }
+        showDialog.loadingDialog("Just wait for a moment")
+        Thread {
+            try {
+                val result = vtScanning.file_scan(requireContext(), selectedFileUri)
+
+                val intent = Intent(requireContext(), ResultScanActivity::class.java)
+                intent.putExtra("malicious", result["malicious"])
+                intent.putExtra("harmless", result["harmless"])
+                intent.putExtra("suspicious", result["suspicious"])
+                intent.putExtra("undetected", result["undetected"])
+
+                requireActivity().runOnUiThread {
+                    showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
+                    startActivity(intent)
+                }
+
+            } catch (e: Exception) {
+                requireActivity().runOnUiThread {
+                    showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
+                    Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }.start()
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

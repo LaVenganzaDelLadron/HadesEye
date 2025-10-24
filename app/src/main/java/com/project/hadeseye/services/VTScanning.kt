@@ -1,4 +1,4 @@
-package com.project.hadeseye.controller
+package com.project.hadeseye.services
 
 import com.chaquo.python.Python
 import android.content.Context
@@ -9,7 +9,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 
-class Scanning {
+class VTScanning {
     val virus_total_api = VirusTotalApi()
 
 
@@ -19,7 +19,7 @@ class Scanning {
         }
 
         val py = Python.getInstance()
-        val pyModule = py.getModule("scanning")
+        val pyModule = py.getModule("vtScanning")
         val result = pyModule.callAttr("scan_url", virus_total_api.apikey, scan_url)
 
         val json = result.toString()
@@ -44,7 +44,7 @@ class Scanning {
         outputStream.close()
 
         val py = Python.getInstance()
-        val pyModule = py.getModule("scanning")
+        val pyModule = py.getModule("vtScanning")
         val result = pyModule.callAttr("scan_file", virus_total_api.apikey, tempFile.absolutePath)
 
         val json = result.toString()
