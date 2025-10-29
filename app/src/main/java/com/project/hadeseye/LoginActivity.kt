@@ -7,11 +7,8 @@ import android.text.InputType
 import android.util.Log
 import android.view.MotionEvent
 import android.widget.EditText
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -21,8 +18,13 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.project.hadeseye.databinding.ActivityLoginBinding
 import com.project.hadeseye.dialog.ShowDialog
+import com.google.firebase.database.FirebaseDatabase
 
 class LoginActivity : AppCompatActivity() {
+
+    private val database = FirebaseDatabase.getInstance(
+        "https://hadeseye-c26c7-default-rtdb.firebaseio.com/"
+    ).getReference("users/account")
 
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var firebaseAuth: FirebaseAuth
@@ -65,6 +67,26 @@ class LoginActivity : AppCompatActivity() {
             firebaseAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
+                        val user = firebaseAuth.currentUser
+                        user?.let {
+                            val userData = mapOf(
+                                "uid" to it.uid,
+                                "email" to it.email,
+                                "name" to (it.displayName ?: "Anonymous"),
+                                "photoUrl" to (it.photoUrl?.toString() ?: ""),
+                                "role" to "User",
+                                "memberSince" to System.currentTimeMillis()
+                            )
+                            database.child("users").child(it.uid).setValue(userData)
+                                .addOnSuccessListener {
+                                    Log.d("FirebaseDebug", "✅ User data added successfully for UID:")
+                                }
+                                .addOnFailureListener { e ->
+                                    Log.e("FirebaseDebug", "❌ Failed to add user data: ${e.message}")
+                                }
+
+                        }
+
                         dialog.successDialog(
                             "Success", "Login Successfully", "OK",
                             Runnable {
@@ -72,9 +94,8 @@ class LoginActivity : AppCompatActivity() {
                                 startActivity(intent)
                                 finish()
                             })
-                    } else {
-                        dialog.invalidDialog("Error", "invalid username or password")
                     }
+
                 }
         }
     }
@@ -139,13 +160,31 @@ class LoginActivity : AppCompatActivity() {
         val credential = GoogleAuthProvider.getCredential(account.idToken, null)
         firebaseAuth.signInWithCredential(credential).addOnCompleteListener { task ->
             if (task.isSuccessful) {
+                val user = firebaseAuth.currentUser
+                user?.let {
+                    val userData = mapOf(
+                        "uid" to it.uid,
+                        "email" to it.email,
+                        "name" to (it.displayName ?: "Google User"),
+                        "photoUrl" to (it.photoUrl?.toString() ?: ""),
+                        "role" to "User",
+                        "memberSince" to System.currentTimeMillis()
+                    )
+                    database.child("users").child(it.uid).setValue(userData)
+                        .addOnSuccessListener {
+                            Log.d("FirebaseDebug", "✅ Google user data added successfully for UID")
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("FirebaseDebug", "❌ Failed to add Google user data: ${e.message}")
+                        }
+
+                }
+
                 intent = Intent(this, DashboardActivity::class.java)
                 startActivity(intent)
                 finish()
-            } else {
-                Log.w("LoginActivity", "Firebase credential sign-in failed", task.exception)
-                dialog.invalidDialog("Error", "Failed to Login. Check logs for details.")
             }
+
         }
     }
 }

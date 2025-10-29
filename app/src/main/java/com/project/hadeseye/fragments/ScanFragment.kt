@@ -14,7 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import com.project.hadeseye.R
 import com.project.hadeseye.ResultScanActivity
-import com.project.hadeseye.services.VTScanning
+import com.project.hadeseye.services.virusTotalServices.VTScanning
 import com.project.hadeseye.dialog.ShowDialog
 
 private const val ARG_PARAM1 = "param1"
@@ -27,7 +27,6 @@ class ScanFragment : Fragment() {
     private lateinit var viewFlipper: ViewFlipper
     private val VIEW_FILE_SCAN = 0
     private val VIEW_URL_SCAN = 1
-    private val VIEW_BREACH_SCAN = 2
 
     private lateinit var btnAddFile: Button
     private lateinit var btnScanUrl: Button
@@ -36,7 +35,8 @@ class ScanFragment : Fragment() {
     private var selectedFileUri: Uri? = null
     lateinit var showDialog: ShowDialog
     lateinit var vtScanning: VTScanning
-
+    private val ipRegex = Regex("^((25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(25[0-5]|2[0-4]\\d|[01]?\\d\\d?)$")
+    private val urlRegex = Regex("^(https?://)?([\\w.-]+)\\.([a-z]{2,6})([/\\w .-]*)*/?$")
 
     private val filePickerLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -70,6 +70,12 @@ class ScanFragment : Fragment() {
         }
     }
 
+
+
+
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -92,9 +98,9 @@ class ScanFragment : Fragment() {
 
         val scanFile = view.findViewById<Button>(R.id.btnFileScan)
         val scanUrl = view.findViewById<Button>(R.id.btnUrlScan)
-        val scanBreach = view.findViewById<Button>(R.id.btnBreachCheck)
-        btnScanUrl = view.findViewById<Button>(R.id.btnStartUrlScan)
-        btnStartFile = view.findViewById<Button>(R.id.btnStartFileScan)
+
+        btnScanUrl = view.findViewById(R.id.btnStartUrlScan)
+        btnStartFile = view.findViewById(R.id.btnStartFileScan)
 
         urlInput = view.findViewById(R.id.urlInput)
         btnAddFile = view.findViewById(R.id.btnAddFile)
@@ -110,7 +116,18 @@ class ScanFragment : Fragment() {
             vtFileScan()
         }
         btnScanUrl.setOnClickListener {
-            vtScanUrl()
+            val input = urlInput.text.toString().trim()
+            when {
+                ipRegex.matches(input) -> {
+                    vtScanIp()
+                }
+                urlRegex.matches(input) -> {
+                    vtScanUrl()
+                }
+                else -> {
+                    showDialog.invalidDialog("Error", "Invalid URL or IP format")
+                }
+            }
         }
 
 
@@ -132,11 +149,6 @@ class ScanFragment : Fragment() {
                 viewFlipper.displayedChild = VIEW_URL_SCAN
             }
         }
-        scanBreach.setOnClickListener {
-            if (viewFlipper.displayedChild != VIEW_BREACH_SCAN) {
-                viewFlipper.displayedChild = VIEW_BREACH_SCAN
-            }
-        }
 
         return view
     }
@@ -145,13 +157,45 @@ class ScanFragment : Fragment() {
     private fun vtScanUrl() {
         val url = urlInput.text.toString().trim()
         if (url.isEmpty()) {
-            showDialog.invalidDialog("Error", "URL cannot be empty")
+            showDialog.invalidDialog("Error", "Field cannot be empty")
         }
 
         showDialog.loadingDialog("Just wait for a moment")
         Thread {
             try {
                 val result = vtScanning.url_scan(requireContext(), url)
+
+                val intent = Intent(requireContext(), ResultScanActivity::class.java)
+                intent.putExtra("malicious", result["malicious"])
+                intent.putExtra("harmless", result["harmless"])
+                intent.putExtra("suspicious", result["suspicious"])
+                intent.putExtra("undetected", result["undetected"])
+
+                requireActivity().runOnUiThread {
+                    showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
+                    startActivity(intent)
+                }
+
+            } catch (e: Exception) {
+                requireActivity().runOnUiThread {
+                    showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
+                    Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }.start()
+    }
+
+
+    private fun vtScanIp() {
+        val ip = urlInput.text.toString().trim()
+        if (ip.isEmpty()) {
+            showDialog.invalidDialog("Error", "Field cannot be empty")
+        }
+
+        showDialog.loadingDialog("Just wait for a moment")
+        Thread {
+            try {
+                val result = vtScanning.ip_scan(requireContext(), ip)
 
                 val intent = Intent(requireContext(), ResultScanActivity::class.java)
                 intent.putExtra("malicious", result["malicious"])
@@ -202,27 +246,6 @@ class ScanFragment : Fragment() {
             }
         }.start()
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

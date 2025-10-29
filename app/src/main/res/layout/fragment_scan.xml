@@ -76,17 +76,6 @@
                     android:textSize="14sp"
                     android:textStyle="normal" />
 
-                <Button
-                    android:id="@+id/btnBreachCheck"
-                    android:layout_width="0dp"
-                    android:layout_height="80dp"
-                    android:layout_weight="1"
-                    android:drawableTop="@drawable/shield"
-                    android:background="@drawable/green_button"
-                    android:text="Breach Check"
-                    android:textColor="@android:color/white"
-                    android:textStyle="normal"
-                    android:textSize="14sp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -100,8 +89,6 @@
             <include layout="@layout/file_scan_layout"/>
 
             <include layout="@layout/url_scan_layout"/>
-
-            <include layout="@layout/breach_layout"/>
 
 
         </ViewFlipper>

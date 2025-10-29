@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "1055564145179",
+    "firebase_url": "https://hadeseye-c26c7-default-rtdb.firebaseio.com",
     "project_id": "hadeseye-c26c7",
     "storage_bucket": "hadeseye-c26c7.firebasestorage.app"
   },
@@ -13,6 +14,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "1055564145179-69jet1nloa3m9dtokl9he8ldiopkeism.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.project.hadeseye",
+            "certificate_hash": "272db36bcc7d8ceb72d1480d6dd6e6161b28f321"
+          }
+        },
         {
           "client_id": "1055564145179-d2sv72mva4qlsb4qrl9foe2k4bhofcgt.apps.googleusercontent.com",
           "client_type": 3

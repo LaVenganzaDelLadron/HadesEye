@@ -40,6 +40,32 @@ def scan_url(api_key, scan_url):
 
     return json.dumps(result)
 
+def scan_ip(api_key, ip):
+    headers = {"x-apikey": api_key}
+    result = {}
+
+    try:
+        response = requests.get(f"{VT_BASE_URL}/ip_addresses/{ip}", headers=headers)
+        response.raise_for_status()
+
+        data = response.json().get("data", {}).get("attributes", {})
+        last_analysis_stats = data.get("last_analysis_stats", {})
+
+        result = {
+            "status": "completed",
+            "malicious": last_analysis_stats.get("malicious", 0),
+            "harmless": last_analysis_stats.get("harmless", 0),
+            "suspicious": last_analysis_stats.get("suspicious", 0),
+            "undetected": last_analysis_stats.get("undetected", 0)
+        }
+
+    except requests.exceptions.RequestException as e:
+        result = {"error": f"Request failed: {e}"}
+    except KeyError:
+        result = {"error": "Unexpected response from VirusTotal"}
+
+    return json.dumps(result)
+
 
 def scan_file(api_key, file_path):
     headers = {"x-apikey": api_key}

@@ -1,10 +1,11 @@
-package com.project.hadeseye.services
+package com.project.hadeseye.services.virusTotalServices
 
-import com.chaquo.python.Python
 import android.content.Context
 import android.net.Uri
+import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import com.project.hadeseye.api.VirusTotalApi
+import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -23,7 +24,26 @@ class VTScanning {
         val result = pyModule.callAttr("scan_url", virus_total_api.apikey, scan_url)
 
         val json = result.toString()
-        val jsonObj = org.json.JSONObject(json)
+        val jsonObj = JSONObject(json)
+        val map = mutableMapOf<String, String>()
+        jsonObj.keys().forEach { key ->
+            map[key] = jsonObj.getString(key)
+        }
+        return map
+    }
+
+
+    fun ip_scan(context: Context, scan_ip: String): Map<String, String> {
+        if (!Python.isStarted()) {
+            Python.start(AndroidPlatform(context))
+        }
+
+        val py = Python.getInstance()
+        val pyModule = py.getModule("vtScanning")
+        val result = pyModule.callAttr("scan_ip", virus_total_api.apikey, scan_ip)
+
+        val json = result.toString()
+        val jsonObj = JSONObject(json)
         val map = mutableMapOf<String, String>()
         jsonObj.keys().forEach { key ->
             map[key] = jsonObj.getString(key)
@@ -48,7 +68,7 @@ class VTScanning {
         val result = pyModule.callAttr("scan_file", virus_total_api.apikey, tempFile.absolutePath)
 
         val json = result.toString()
-        val jsonObj = org.json.JSONObject(json)
+        val jsonObj = JSONObject(json)
         val map = mutableMapOf<String, String>()
         jsonObj.keys().forEach { key -> map[key] = jsonObj.getString(key) }
         return map
