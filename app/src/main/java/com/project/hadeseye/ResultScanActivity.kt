@@ -1,10 +1,13 @@
 package com.project.hadeseye
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.bumptech.glide.Glide
 import com.google.android.material.appbar.MaterialToolbar
 import com.project.hadeseye.databinding.ActivityResultScanBinding
 
@@ -27,11 +30,27 @@ class ResultScanActivity : AppCompatActivity() {
         val harmless = intent.getStringExtra("harmless")
         val suspicious = intent.getStringExtra("suspicious")
         val undetected = intent.getStringExtra("undetected")
+        val screenshotPath = intent.getStringExtra("screenshot_path")
 
         binding.malicious.text = "Malicious: $malicious"
         binding.harmless.text = "Harmless: $harmless"
         binding.suspicious.text = "Suspicious: $suspicious"
         binding.undetected.text = "Undetected: $undetected"
+
+        if (!screenshotPath.isNullOrEmpty()) {
+            Glide.with(this)
+                .load(Uri.parse("file://$screenshotPath"))
+                .placeholder(R.drawable.loading)
+                .error(R.drawable.broken_image)
+                .into(binding.screenShot)
+
+            // 👇 Add this block
+            binding.screenShot.setOnClickListener {
+                val intent = Intent(this, FullScreenImageActivity::class.java)
+                intent.putExtra("image_path", screenshotPath)
+                startActivity(intent)
+            }
+        }
 
 
     }

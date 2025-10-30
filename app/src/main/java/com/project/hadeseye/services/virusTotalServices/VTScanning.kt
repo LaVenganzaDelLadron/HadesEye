@@ -14,7 +14,7 @@ class VTScanning {
     val virus_total_api = VirusTotalApi()
 
 
-    fun url_scan(context: Context, scan_url: String): Map<String, String> {
+    fun vt_url_scan(context: Context, scan_url: String): Map<String, String> {
         if (!Python.isStarted()) {
             Python.start(AndroidPlatform(context))
         }
@@ -33,7 +33,7 @@ class VTScanning {
     }
 
 
-    fun ip_scan(context: Context, scan_ip: String): Map<String, String> {
+    fun vt_ip_scan(context: Context, scan_ip: String): Map<String, String> {
         if (!Python.isStarted()) {
             Python.start(AndroidPlatform(context))
         }
@@ -51,7 +51,7 @@ class VTScanning {
         return map
     }
 
-    fun file_scan(context: Context, fileUri: Uri?): Map<String, String> {
+    fun vt_file_scan(context: Context, fileUri: Uri?): Map<String, String> {
         if (!Python.isStarted()) {
             Python.start(AndroidPlatform(context))
         }

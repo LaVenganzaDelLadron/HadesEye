@@ -6,6 +6,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +17,7 @@ import com.project.hadeseye.R
 import com.project.hadeseye.ResultScanActivity
 import com.project.hadeseye.services.virusTotalServices.VTScanning
 import com.project.hadeseye.dialog.ShowDialog
+import com.project.hadeseye.services.virusTotalServices.urlServices.URLScanning
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
@@ -35,8 +37,9 @@ class ScanFragment : Fragment() {
     private var selectedFileUri: Uri? = null
     lateinit var showDialog: ShowDialog
     lateinit var vtScanning: VTScanning
+    private lateinit var urlScanning: URLScanning
     private val ipRegex = Regex("^((25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(25[0-5]|2[0-4]\\d|[01]?\\d\\d?)$")
-    private val urlRegex = Regex("^(https?://)?([\\w.-]+)\\.([a-z]{2,6})([/\\w .-]*)*/?$")
+    private val urlRegex = Regex("^(https?://)?([\\w.-]+@)?([\\w.-]+)\\.([a-z]{2,})([/\\w .-]*)*/?$")
 
     private val filePickerLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -92,6 +95,7 @@ class ScanFragment : Fragment() {
 
         showDialog = ShowDialog(requireContext())
         vtScanning = VTScanning()
+        urlScanning = URLScanning()
 
         viewFlipper = view.findViewById(R.id.viewFlipper)
         viewFlipper.displayedChild = VIEW_FILE_SCAN
@@ -122,19 +126,13 @@ class ScanFragment : Fragment() {
                     vtScanIp()
                 }
                 urlRegex.matches(input) -> {
-                    vtScanUrl()
+                    vTuSScanUrl()
                 }
                 else -> {
                     showDialog.invalidDialog("Error", "Invalid URL or IP format")
                 }
             }
         }
-
-
-
-
-
-
 
 
 
@@ -154,7 +152,8 @@ class ScanFragment : Fragment() {
     }
 
 
-    private fun vtScanUrl() {
+
+    private fun vTuSScanUrl() {
         val url = urlInput.text.toString().trim()
         if (url.isEmpty()) {
             showDialog.invalidDialog("Error", "Field cannot be empty")
@@ -163,15 +162,21 @@ class ScanFragment : Fragment() {
         showDialog.loadingDialog("Just wait for a moment")
         Thread {
             try {
-                val result = vtScanning.url_scan(requireContext(), url)
+                val vtResult = vtScanning.vt_url_scan(requireContext(), url)
+                val usResult = urlScanning.us_url_scan(requireContext(), url)
+                val screenshotPath = usResult["screenshot_path"]
+
 
                 val intent = Intent(requireContext(), ResultScanActivity::class.java)
-                intent.putExtra("malicious", result["malicious"])
-                intent.putExtra("harmless", result["harmless"])
-                intent.putExtra("suspicious", result["suspicious"])
-                intent.putExtra("undetected", result["undetected"])
+                intent.putExtra("malicious", vtResult["malicious"])
+                intent.putExtra("harmless", vtResult["harmless"])
+                intent.putExtra("suspicious", vtResult["suspicious"])
+                intent.putExtra("undetected", vtResult["undetected"])
+                intent.putExtra("screenshot_path", screenshotPath)
 
                 requireActivity().runOnUiThread {
+                    Toast.makeText(requireContext(), "US Result: $usResult", Toast.LENGTH_LONG).show()
+                    Log.d("URLScanning", "US Result: $usResult")
                     showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
                     startActivity(intent)
                 }
@@ -184,8 +189,6 @@ class ScanFragment : Fragment() {
             }
         }.start()
     }
-
-
     private fun vtScanIp() {
         val ip = urlInput.text.toString().trim()
         if (ip.isEmpty()) {
@@ -195,7 +198,7 @@ class ScanFragment : Fragment() {
         showDialog.loadingDialog("Just wait for a moment")
         Thread {
             try {
-                val result = vtScanning.ip_scan(requireContext(), ip)
+                val result = vtScanning.vt_ip_scan(requireContext(), ip)
 
                 val intent = Intent(requireContext(), ResultScanActivity::class.java)
                 intent.putExtra("malicious", result["malicious"])
@@ -225,7 +228,7 @@ class ScanFragment : Fragment() {
         showDialog.loadingDialog("Just wait for a moment")
         Thread {
             try {
-                val result = vtScanning.file_scan(requireContext(), selectedFileUri)
+                val result = vtScanning.vt_file_scan(requireContext(), selectedFileUri)
 
                 val intent = Intent(requireContext(), ResultScanActivity::class.java)
                 intent.putExtra("malicious", result["malicious"])
@@ -246,14 +249,6 @@ class ScanFragment : Fragment() {
             }
         }.start()
     }
-
-
-
-
-
-
-
-
     private fun pickFile() {
         filePickerLauncher.launch("*/*")
     }

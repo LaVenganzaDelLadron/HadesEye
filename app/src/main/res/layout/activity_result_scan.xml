@@ -44,8 +44,8 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
                     android:background="@drawable/button_outline_green"
+                    android:orientation="vertical"
                     android:padding="10dp">
 
                     <TextView
@@ -105,21 +105,50 @@
                         android:textColor="#FFFFFF"
                         android:textSize="20sp"
                         android:textStyle="normal" />
-
-
-
-
-
-
-
-
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:orientation="vertical">
 
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="16dp"
+                android:elevation="4dp"
+                app:cardBackgroundColor="#1A1F26"
+                app:cardCornerRadius="10dp">
+
+                <TextView
+                    android:id="@+id/scanImageResults"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="120dp"
+                    android:layout_marginBottom="12dp"
+                    android:text="Scan Image:"
+                    android:textColor="#1DB954"
+                    android:paddingLeft="10dp"
+                    android:textSize="20sp"
+                    android:textStyle="normal" />
+
+                <ImageView
+                    android:id="@+id/screenShot"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitCenter"
+                    android:adjustViewBounds="true"
+                    android:contentDescription="Screenshot"
+                    android:padding="8dp"
+                    android:background="@drawable/button_outline_green"/>
+            </androidx.cardview.widget.CardView>
         </LinearLayout>
 
+
+
+        </LinearLayout>
     </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
