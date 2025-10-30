@@ -41,10 +41,9 @@ class ResultScanActivity : AppCompatActivity() {
             Glide.with(this)
                 .load(Uri.parse("file://$screenshotPath"))
                 .placeholder(R.drawable.loading)
-                .error(R.drawable.broken_image)
+                .error(R.drawable.image_broken)
                 .into(binding.screenShot)
 
-            // 👇 Add this block
             binding.screenShot.setOnClickListener {
                 val intent = Intent(this, FullScreenImageActivity::class.java)
                 intent.putExtra("image_path", screenshotPath)

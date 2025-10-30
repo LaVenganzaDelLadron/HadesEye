@@ -30,7 +30,7 @@ class FullScreenImageActivity : AppCompatActivity() {
             Glide.with(this)
                 .load(Uri.parse("file://$imagePath"))
                 .placeholder(R.drawable.loading)
-                .error(R.drawable.broken_image)
+                .error(R.drawable.image_broken)
                 .into(binding.fullScreenImage)
         }
 
