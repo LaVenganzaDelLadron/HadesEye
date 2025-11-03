@@ -52,6 +52,15 @@ class LoginActivity : AppCompatActivity() {
             signInWithGoogle()
         }
 
+        binding.dontHaveAccount.setOnClickListener {
+            intent = Intent(this, SignupActivity::class.java)
+            startActivity(intent)
+        }
+        binding.forgotPassword.setOnClickListener {
+            intent = Intent(this, ResetPasswordActivity::class.java)
+            startActivity(intent)
+        }
+
         binding.loginButton.setOnClickListener {
             val email = binding.emailInput.text.toString()
             val password = binding.passwordInput.text.toString()

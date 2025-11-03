@@ -143,4 +143,76 @@ def scan_ip_ha(api_key, ip_address):
             "threat_score": "N/A"
         }
 
-    return json.dumps(result)  # ✅ Always return as JSON string
+    return json.dumps(result)
+
+
+def scan_file_ha(api_key, file_path):
+    result = {}
+    try:
+        if not os.path.exists(file_path):
+            return {"error": f"File not found: {file_path}"}
+
+        headers = {
+            "User-Agent": "Falcon Sandbox",
+            "api-key": api_key
+        }
+
+        print(f"Uploading file for analysis: {file_path}")
+        files = {"file": open(file_path, "rb")}
+        data = {"scan_type": "all"}
+
+        response = requests.post(f"{HA_BASE_URL}/quick-scan/file", headers=headers, files=files, data=data)
+        response.raise_for_status()
+        upload_result = response.json()
+        print("Upload response:", upload_result)
+
+        job_id = upload_result.get("job_id") or upload_result.get("sha256") or upload_result.get("id")
+        if not job_id:
+            return {"error": "Could not find job_id or sha256 in response."}
+
+        print(f"Scan started. Job ID: {job_id}")
+        print(f"Report Page: https://www.hybrid-analysis.com/sample/{job_id}")
+
+        # Poll for report
+        while True:
+            time.sleep(10)
+            check_resp = requests.get(f"{HA_BASE_URL}/report/{job_id}/summary", headers=headers)
+            if check_resp.status_code == 200:
+                summary = check_resp.json()
+                verdict = summary.get("verdict")
+                if verdict is not None:
+                    threat_score = summary.get("threat_score", "N/A")
+                    threat_level = summary.get("threat_level", "Unknown")
+
+                    if "malicious" in str(verdict).lower():
+                        result = {
+                            "file_name": os.path.basename(file_path),
+                            "threat_level": threat_level,
+                            "verdict": "⚠️ Detected as a malicious file.",
+                            "threat_score": threat_score
+                        }
+                    else:
+                        result = {
+                            "file_name": os.path.basename(file_path),
+                            "threat_level": threat_level,
+                            "verdict": "✅ No signs of malware detected.",
+                            "threat_score": threat_score
+                        }
+                    break
+                else:
+                    print("⏳ Scan still processing...")
+                    result = {"status": "processing"}
+            elif check_resp.status_code == 404:
+                print("⏳ Report not ready yet...")
+                result = {"status": "waiting"}
+            else:
+                print(f"⚠️ Unexpected status: {check_resp.status_code}")
+                result = {"error": f"Unexpected status: {check_resp.status_code}"}
+                break
+
+    except requests.exceptions.HTTPError as err:
+        result = {"error": "HTTP Error", "details": err.response.text}
+    except Exception as e:
+        result = {"error": "Exception occurred", "details": str(e)}
+
+    return result  # ✅ fixed

@@ -1,5 +1,6 @@
 package com.project.hadeseye.fragments
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.Gravity
@@ -15,6 +16,10 @@ import com.project.hadeseye.DashboardActivity
 import com.project.hadeseye.R
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import android.view.ViewGroup.LayoutParams
+import android.widget.Button
+import com.project.hadeseye.LearnMalwareActivity
+import com.project.hadeseye.LearnPhishActivity
+import com.project.hadeseye.LearnRansomActivity
 
 class HomeFragment : Fragment() {
 
@@ -23,8 +28,11 @@ class HomeFragment : Fragment() {
     private lateinit var tvScansCount: TextView
     private lateinit var tvThreatCounts: TextView
     private lateinit var tvMaliciousCounts: TextView
-
+    private lateinit var btnPhishingRead: Button
+    private lateinit var btnMalwareRead: Button
+    private lateinit var btnRansomwareRead: Button
     private lateinit var recentActivityContainer: LinearLayout
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,6 +44,10 @@ class HomeFragment : Fragment() {
         tvThreatCounts = view.findViewById(R.id.tvThreatCounts)
         tvMaliciousCounts = view.findViewById(R.id.tvMaliciousCounts)
         recentActivityContainer = view.findViewById(R.id.recentActivityContainer)
+        btnPhishingRead = view.findViewById(R.id.btnPhishingRead)
+        btnMalwareRead = view.findViewById(R.id.btnMalwareRead)
+        btnRansomwareRead = view.findViewById(R.id.btnRansomwareRead)
+
 
         auth = FirebaseAuth.getInstance()
         val currentUser = auth.currentUser
@@ -63,6 +75,27 @@ class HomeFragment : Fragment() {
             dashboardActivity?.findViewById<BottomNavigationView>(R.id.bottomNavigationView)
                 ?.selectedItemId = R.id.report
         }
+
+
+        btnPhishingRead.setOnClickListener {
+            val intent = Intent(requireContext(), LearnPhishActivity::class.java)
+            startActivity(intent)
+        }
+
+        btnMalwareRead.setOnClickListener {
+            val intent = Intent(requireContext(), LearnMalwareActivity::class.java)
+            startActivity(intent)
+        }
+
+        btnRansomwareRead.setOnClickListener {
+            val intent = Intent(requireContext(), LearnRansomActivity::class.java)
+            startActivity(intent)
+        }
+
+
+
+
+
 
         return view
     }

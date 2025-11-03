@@ -12,18 +12,20 @@ import android.widget.TextView
 import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.project.hadeseye.LoginActivity
 import com.project.hadeseye.R
 import com.project.hadeseye.UpdateInfoActivity
+import com.project.hadeseye.dialog.ShowDialog
 import java.text.SimpleDateFormat
 import java.util.*
 
 class AccountFragment : Fragment() {
 
     private lateinit var firebaseAuth: FirebaseAuth
-
+    private lateinit var showDialog: ShowDialog
     private lateinit var profileImage: ImageView
     private lateinit var accountName: TextView
     private lateinit var accountEmail: TextView
@@ -47,12 +49,13 @@ class AccountFragment : Fragment() {
         btnLogout = view.findViewById(R.id.btnLogout)
         btnEdit = view.findViewById(R.id.btnEdit)
 
+
+        showDialog = ShowDialog(requireContext())
+
         firebaseAuth = FirebaseAuth.getInstance()
 
-        // Load user info
         loadUserInfo()
 
-        // Edit info
         btnEdit.setOnClickListener {
             startActivity(Intent(requireContext(), UpdateInfoActivity::class.java))
         }
@@ -113,8 +116,6 @@ class AccountFragment : Fragment() {
                         accountName.text = name ?: user.displayName ?: "No Name"
                         tvPhoneNumber.text = "Phone: ${phone ?: "Not set"}"
                         tvAddress.text = "Address: ${address ?: "Not set"}"
-                    } else {
-                        Toast.makeText(requireContext(), "⚠ No user info found", Toast.LENGTH_SHORT).show()
                     }
                 }
                 .addOnFailureListener { e ->
@@ -124,18 +125,25 @@ class AccountFragment : Fragment() {
     }
 
     private fun logoutUser() {
-        firebaseAuth.signOut()
-        val googleSignInClient = GoogleSignIn.getClient(
-            requireContext(),
-            com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN
-        )
-        googleSignInClient.signOut().addOnCompleteListener {
-            val intent = Intent(requireContext(), LoginActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
-            requireActivity().finish()
-        }
+        val showDialog = ShowDialog(requireContext())
+        showDialog.logoutDialog(Runnable {
+            // Proceed with logout
+            firebaseAuth.signOut()
+
+            val googleSignInClient = GoogleSignIn.getClient(
+                requireContext(),
+                com.google.android.gms.auth.api.signin.GoogleSignInOptions.DEFAULT_SIGN_IN
+            )
+
+            googleSignInClient.signOut().addOnCompleteListener {
+                val intent = Intent(requireContext(), LoginActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                requireActivity().finish()
+            }
+        })
     }
+
 
     override fun onResume() {
         super.onResume()

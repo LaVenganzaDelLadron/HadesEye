@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0B0F12">
+
+    <!-- Toolbar with Back Button -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbarLearnRansom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/secondarycolor"
+        android:paddingTop="30dp"
+        app:navigationIcon="@drawable/arrow_left"
+        app:navigationIconTint="@color/white"
+        app:title="Learn Ransomware"
+        app:titleTextColor="@color/white"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Scrollable Content -->
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="16dp"
+        app:layout_constraintTop_toBottomOf="@id/toolbarLearnRansom"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- What is Ransomware -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="10dp"
+                app:cardBackgroundColor="#121418"
+                app:cardElevation="3dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvWhatIsRansom"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="What is Ransomware?"
+                        android:textColor="#1DB954"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvRansomDesc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Ransomware is malicious software that encrypts files or locks access to a system and demands payment (ransom) to restore access. Attackers often spread it via phishing, malicious attachments, or insecure remote services."
+                        android:textColor="#BBBBBB"
+                        android:textSize="15sp"
+                        android:lineSpacingExtra="4dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Common Types / Examples -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="10dp"
+                app:cardBackgroundColor="#121418"
+                app:cardElevation="3dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvTypesHeader"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Common Types / Examples"
+                        android:textColor="#FFD93D"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvRansomExamples"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="• **Crypto-ransomware:** Encrypts files and demands payment for decryption.\n\n• **Locker ransomware:** Locks the user out of the device or OS.\n\n• **Ransomware via phishing:** Delivered as an attachment or malicious link in email.\n\n• **Ransomware via RDP/Remote services:** Attackers exploit weak remote access to deploy payloads."
+                        android:textColor="#BBBBBB"
+                        android:textSize="15sp"
+                        android:lineSpacingExtra="6dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- How to Protect Yourself -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="10dp"
+                app:cardBackgroundColor="#121418"
+                app:cardElevation="3dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvProtectHeader"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="How to Protect Yourself"
+                        android:textColor="#1DB954"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvProtectList"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="• Keep regular backups (offline or immutable backups). \n• Don’t open suspicious attachments or links. \n• Keep OS, apps, and security software updated.\n• Use strong passwords and 2FA. \n• Disable or secure remote access (RDP). \n• Limit user privileges; use least privilege.\n• Use reputable endpoint protection and EDR where possible."
+                        android:textColor="#BBBBBB"
+                        android:textSize="15sp"
+                        android:lineSpacingExtra="6dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- If Infected: Recovery Steps -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="10dp"
+                app:cardBackgroundColor="#121418"
+                app:cardElevation="3dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvRecoveryHeader"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="If You Think You're Infected"
+                        android:textColor="#6DC5FF"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvRecoverySteps"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="1. Isolate the device from network and removable storage. \n2. Do NOT pay ransom unless advised by incident response professionals. \n3. Identify scope and affected systems. \n4. Restore from verified clean backups. \n5. Patch exploited vulnerabilities and change credentials. \n6. Report incident to authorities / IT security team."
+                        android:textColor="#BBBBBB"
+                        android:textSize="15sp"
+                        android:lineSpacingExtra="6dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Helpful Resources (links text) -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="10dp"
+                app:cardBackgroundColor="#121418"
+                app:cardElevation="3dp"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvResourcesHeader"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Helpful (read-only) Resources"
+                        android:textColor="#1DB954"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp" />
+
+                    <TextView
+                        android:id="@+id/tvResources"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="• Search for official guidance from your antivirus vendor, CERT, or national cyber authority.\n• Check reputable blogs and incident reports for indicators of compromise (IOCs)."
+                        android:textColor="#BBBBBB"
+                        android:textSize="14sp"
+                        android:lineSpacingExtra="6dp" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

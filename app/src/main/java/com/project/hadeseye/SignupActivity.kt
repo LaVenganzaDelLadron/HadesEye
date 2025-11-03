@@ -46,6 +46,10 @@ class SignupActivity : AppCompatActivity() {
 
         binding.signupButton.setOnClickListener { handleSignup() }
         binding.googleIcon.setOnClickListener { signInWithGoogle() }
+        binding.alreadyHaveAccount.setOnClickListener {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+        }
     }
 
     private fun setupGoogleSignIn() {

@@ -15,6 +15,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.HadesEye">
         <activity
+            android:name=".ResetPasswordActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LearnMalwareActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LearnPhishActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LearnRansomActivity"
+            android:exported="false"
+            android:theme="@style/Theme.HadesEye" />
+        <activity
             android:name=".UpdateInfoActivity"
             android:exported="false" />
         <activity

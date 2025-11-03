@@ -54,4 +54,24 @@ class ShowDialog(private val context: Context) {
         return pDialog
     }
 
+    fun logoutDialog(onConfirm: Runnable?) {
+        KAlertDialog(context, KAlertDialog.WARNING_TYPE, isTrue)
+            .setTitleText("Logout Confirmation")
+            .setContentText("Are you sure you want to log out of your account?")
+            .setCancelText("No")
+            .setConfirmText("Yes")
+            .confirmButtonColor(R.color.green)
+            .cancelButtonColor(R.color.gray)
+            .setConfirmClickListener { dialog ->
+                dialog.dismissWithAnimation()
+                onConfirm?.run()
+            }
+            .setCancelClickListener { dialog ->
+                dialog.dismissWithAnimation()
+            }
+            .show()
+    }
+
+
+
 }

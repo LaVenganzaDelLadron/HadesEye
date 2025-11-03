@@ -181,18 +181,6 @@
                                 android:contentDescription="Screenshot"
                                 android:padding="8dp" />
 
-                            <!-- Text overlay inside the image area -->
-                            <TextView
-                                android:id="@+id/noImageText"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:gravity="center"
-                                android:text="No image retrieved"
-                                android:textColor="#FFFFFF"
-                                android:textStyle="bold"
-                                android:textSize="18sp"
-                                android:background="#801A1F26"
-                                android:visibility="visible" />
                         </FrameLayout>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>

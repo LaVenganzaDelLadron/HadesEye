@@ -143,7 +143,7 @@ class ScanFragment : Fragment() {
         btnAddFile.setOnClickListener { pickFile() }
 
         btnStartFile.setOnClickListener {
-            vtFileScan()
+            vTHaFileScan()
         }
         btnScanUrl.setOnClickListener {
             val input = urlInput.text.toString().trim()
@@ -334,9 +334,9 @@ class ScanFragment : Fragment() {
                     putExtra("harmless", vtResult["harmless"])
                     putExtra("suspicious", vtResult["suspicious"])
                     putExtra("undetected", vtResult["undetected"])
-                    putExtra("threat_level", haResult["threat_level"])
-                    putExtra("threat_score", haResult["threat_score"])
-                    putExtra("verdict", haResult["verdict"])
+                    putExtra("threat_level", haResult["threat_level"]?: "N/A")
+                    putExtra("threat_score", haResult["threat_score"]?: "N/A")
+                    putExtra("verdict", haResult["verdict"]?: "N/A")
                 }
 
                 requireActivity().runOnUiThread {
@@ -355,7 +355,7 @@ class ScanFragment : Fragment() {
     }
 
 
-    private fun vtFileScan() {
+    private fun vTHaFileScan() {
         if (selectedFileUri == null) {
             showDialog.invalidDialog("Error", "No file selected")
             return
@@ -364,6 +364,7 @@ class ScanFragment : Fragment() {
         Thread {
             try {
                 val result = vtScanning.vt_file_scan(requireContext(), selectedFileUri)
+                val haResult = haScanning.ha_file_scan(requireContext(), selectedFileUri)
 
                 val intent = Intent(requireContext(), ResultScanUrlActivity::class.java)
                 intent.putExtra("file_name", getFileName(selectedFileUri!!))
@@ -371,6 +372,9 @@ class ScanFragment : Fragment() {
                 intent.putExtra("harmless", result["harmless"])
                 intent.putExtra("suspicious", result["suspicious"])
                 intent.putExtra("undetected", result["undetected"])
+                intent.putExtra("threat_level", haResult["threat_level"]?: "N/A")
+                intent.putExtra("threat_score", haResult["threat_score"]?: "N/A")
+                intent.putExtra("verdict", haResult["verdict"] ?: "N/A")
 
                 requireActivity().runOnUiThread {
                     loading.dismissWithAnimation()

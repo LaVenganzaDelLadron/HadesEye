@@ -60,8 +60,6 @@ class ResultScanUrlActivity : AppCompatActivity() {
                 intent.putExtra("image_path", screenshotPath)
                 startActivity(intent)
             }
-        }else {
-            binding.noImageText.visibility = View.VISIBLE
         }
 
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -71,10 +69,12 @@ class ResultScanUrlActivity : AppCompatActivity() {
         val suspiciousCount = suspicious?.toIntOrNull() ?: 0
 
         val status = when {
-            maliciousCount >= 1 && suspiciousCount >= 1 -> "Threat"
-            maliciousCount >= 1 -> "Malicious"
+            maliciousCount >= 10 -> "Malicious"
+            maliciousCount >= 2 && suspiciousCount >= 1 -> "Threat"
+            maliciousCount >= 1 -> "Threat"
             else -> "Safe"
         }
+
 
         val scanData = mapOf(
             "url" to url,
