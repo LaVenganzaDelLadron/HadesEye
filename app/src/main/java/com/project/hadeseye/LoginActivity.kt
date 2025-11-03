@@ -24,7 +24,8 @@ class LoginActivity : AppCompatActivity() {
 
     private val database = FirebaseDatabase.getInstance(
         "https://hadeseye-c26c7-default-rtdb.firebaseio.com/"
-    ).getReference("users/account")
+    ).getReference("account/users")
+
 
     private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var firebaseAuth: FirebaseAuth
@@ -73,8 +74,9 @@ class LoginActivity : AppCompatActivity() {
                                 "uid" to it.uid,
                                 "email" to it.email,
                                 "name" to (it.displayName ?: "Anonymous"),
+                                "phone" to "",
+                                "address" to "",
                                 "photoUrl" to (it.photoUrl?.toString() ?: ""),
-                                "role" to "User",
                                 "memberSince" to System.currentTimeMillis()
                             )
                             database.child("users").child(it.uid).setValue(userData)
@@ -166,8 +168,9 @@ class LoginActivity : AppCompatActivity() {
                         "uid" to it.uid,
                         "email" to it.email,
                         "name" to (it.displayName ?: "Google User"),
+                        "phone" to "",
+                        "address" to "",
                         "photoUrl" to (it.photoUrl?.toString() ?: ""),
-                        "role" to "User",
                         "memberSince" to System.currentTimeMillis()
                     )
                     database.child("users").child(it.uid).setValue(userData)

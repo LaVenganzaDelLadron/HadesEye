@@ -87,11 +87,11 @@
             android:layout_marginTop="16dp">
 
             <include layout="@layout/file_scan_layout"/>
-
             <include layout="@layout/url_scan_layout"/>
 
-
         </ViewFlipper>
+
+        <include layout="@layout/recent_activity_layout"/>
 
     </LinearLayout>
 </ScrollView>

@@ -16,122 +16,151 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.database.FirebaseDatabase
 import com.project.hadeseye.databinding.ActivitySigunpBinding
 import com.project.hadeseye.dialog.ShowDialog
 import java.util.regex.Pattern
 
 class SignupActivity : AppCompatActivity() {
 
+    private val database = FirebaseDatabase.getInstance(
+        "https://hadeseye-c26c7-default-rtdb.firebaseio.com/"
+    ).getReference("account/users")
+
     private lateinit var binding: ActivitySigunpBinding
-    private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var firebaseAuth: FirebaseAuth
+    private lateinit var googleSignInClient: GoogleSignInClient
+    private var dialog = ShowDialog(this)
     private var isPasswordVisible = true
     private var isConfirmPasswordVisible = true
-    private var dialog = ShowDialog(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySigunpBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
-        setupPasswordToggle(binding.passwordInput, true)
-        setupPasswordToggle(binding.confirmPasswordInput, true)
         firebaseAuth = FirebaseAuth.getInstance()
+        setupPasswordToggle(binding.passwordInput, true)
+        setupPasswordToggle(binding.confirmPasswordInput, false)
+        setupGoogleSignIn()
 
+        binding.signupButton.setOnClickListener { handleSignup() }
+        binding.googleIcon.setOnClickListener { signInWithGoogle() }
+    }
 
+    private fun setupGoogleSignIn() {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
+
         googleSignInClient = GoogleSignIn.getClient(this, gso)
+    }
 
-        binding.googleIcon.setOnClickListener {
-            signInWithGoogle()
+    private fun handleSignup() {
+        val email = binding.emailInput.text.toString().trim()
+        val password = binding.passwordInput.text.toString().trim()
+        val confirmPassword = binding.confirmPasswordInput.text.toString().trim()
+
+        // Validations
+        if (!isEmailValid(email)) {
+            dialog.invalidDialog("Error", "Invalid email")
+            return
+        }
+        if (!isPasswordValid(password)) {
+            dialog.invalidDialog("Error", "Password must contain upper, lower, number, symbol and at least 8 chars")
+            return
+        }
+        if (password != confirmPassword) {
+            dialog.invalidDialog("Error", "Passwords do not match")
+            return
         }
 
-        binding.googleIcon.setOnClickListener{
-            signInWithGoogle()
-        }
-
-        binding.signupButton.setOnClickListener {
-            val email = binding.emailInput.text.toString()
-            val password = binding.passwordInput.text.toString()
-            val confirmPassword = binding.confirmPasswordInput.text.toString()
-
-            if (!isEmailValid(email)) {
-                dialog.invalidDialog("Error", "invalid email")
-                return@setOnClickListener
-            }
-            if (!isPasswordValid(password)) {
-                dialog.invalidDialog(
-                    "Error",
-                    "password must contains character, number and symbols"
-                )
-                return@setOnClickListener
-            }
-            if (password != confirmPassword) {
-                dialog.invalidDialog("Error", "password doesn't match")
-                return@setOnClickListener
-            }
-
-            if (email.isNotEmpty() && password.isNotEmpty() && confirmPassword.isNotEmpty()) {
-                firebaseAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener {
-                    if (it.isSuccessful) {
-                        dialog.successDialog(
-                            "Success", "Signup Successfully", "OK",
-                            Runnable {
-                                intent = Intent(this, LoginActivity::class.java)
-                                startActivity(intent)
-                                finish()
-                            })
-                    } else {
-                        dialog.invalidDialog("Error", "Failed to signup. Check logs for details.")
-                    }
+        // Create user
+        firebaseAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val user = firebaseAuth.currentUser
+                user?.let {
+                    val userData = mapOf(
+                        "uid" to it.uid,
+                        "email" to it.email,
+                        "name" to (it.displayName ?: "Anonymous"),
+                        "phone" to "",
+                        "address" to "",
+                        "photoUrl" to (it.photoUrl?.toString() ?: ""),
+                        "memberSince" to System.currentTimeMillis()
+                    )
+                    database.child("users").child(it.uid).setValue(userData)
+                        .addOnSuccessListener {
+                            Log.d("FirebaseDebug", "✅ User data added successfully for UID: ${user.uid}")
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("FirebaseDebug", "❌ Failed to add user data: ${e.message}")
+                        }
                 }
-            } else {
-                dialog.invalidDialog("Error", "Empty fields are not allowed")
-            }
 
+
+                dialog.successDialog(
+                    "Success", "Signup Successful", "OK",
+                    Runnable {
+                        startActivity(Intent(this, LoginActivity::class.java))
+                        finish()
+                    }
+                )
+            } else {
+                dialog.invalidDialog("Error", "Failed to signup. Check logs for details.")
+            }
         }
     }
 
     private fun signInWithGoogle() {
         launcher.launch(googleSignInClient.signInIntent)
     }
+
     private val launcher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            handleResultTask(task)
+            handleGoogleSignInTask(task)
         }
     }
 
-    private fun handleResultTask(task: Task<GoogleSignInAccount>) {
+    private fun handleGoogleSignInTask(task: Task<GoogleSignInAccount>) {
         if (task.isSuccessful) {
-            val account: GoogleSignInAccount? = task.result
-            if (account != null) {
-                updateUI(account)
-            }
+            task.result?.let { updateUIWithGoogle(it) }
         } else {
-            Log.w("LoginActivity", "Google Sign-In failed", task.exception)
+            Log.w("SignupActivity", "Google Sign-In failed", task.exception)
             dialog.invalidDialog("Error", "Failed to signup. Check logs for details.")
         }
     }
 
-    private fun updateUI(account: GoogleSignInAccount) {
-        Log.d("LoginActivity", "Updating UI with account: ${account.email}")
+    private fun updateUIWithGoogle(account: GoogleSignInAccount) {
         val credential = GoogleAuthProvider.getCredential(account.idToken, null)
         firebaseAuth.signInWithCredential(credential).addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                intent = Intent(this, DashboardActivity::class.java)
-                startActivity(intent)
+                val user = firebaseAuth.currentUser
+                user?.let {
+                    val userData = mapOf(
+                        "uid" to it.uid,
+                        "email" to it.email,
+                        "name" to (it.displayName ?: "Google User"),
+                        "phone" to "",
+                        "address" to "",
+                        "photoUrl" to (it.photoUrl?.toString() ?: ""),
+                        "memberSince" to System.currentTimeMillis()
+                    )
+                    database.child("users").child(it.uid).setValue(userData)
+                        .addOnSuccessListener { Log.d("FirebaseDebug", "✅ Google user data added successfully") }
+                        .addOnFailureListener { e -> Log.e("FirebaseDebug", "❌ Failed to add Google user data: ${e.message}") }
+                }
+                startActivity(Intent(this, DashboardActivity::class.java))
                 finish()
             } else {
-                Log.w("LoginActivity", "Firebase credential sign-in failed", task.exception)
-                dialog.invalidDialog("Error", "Failed to Login. Check logs for details.")
+                dialog.invalidDialog("Error", "Google login failed. Check logs.")
             }
         }
     }
+
+    // Password toggle
     private fun setupPasswordToggle(editText: EditText, isMainPassword: Boolean) {
         editText.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_UP) {
@@ -152,27 +181,24 @@ class SignupActivity : AppCompatActivity() {
     }
 
     private fun togglePasswordVisibility(editText: EditText, visible: Boolean) {
-        if (visible) {
-            editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
-            editText.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.eye, 0)
-        } else {
-            editText.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            editText.setCompoundDrawablesWithIntrinsicBounds(0, 0, R.drawable.eye_closed, 0)
-        }
-        editText.setSelection(editText.text.length) // keep cursor at end
+        editText.inputType =
+            if (visible) InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+            else InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+
+        editText.setCompoundDrawablesWithIntrinsicBounds(
+            0, 0,
+            if (visible) R.drawable.eye else R.drawable.eye_closed, 0
+        )
+        editText.setSelection(editText.text.length)
     }
 
     private fun isEmailValid(email: String): Boolean {
-        val pattern = Pattern.compile(
-            "^[A-Za-z0-9+-.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}\$")
-        val matcher = pattern.matcher(email)
-        return matcher.matches()
+        val pattern = Pattern.compile("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")
+        return pattern.matcher(email).matches()
     }
 
     private fun isPasswordValid(password: String): Boolean {
-        val pattern = Pattern.compile(
-            "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@\$!%=*?&])[A-Za-z\\d@\$!=%*?&]{8,}$")
-        val matcher = pattern.matcher(password)
-        return matcher.matches()
+        val pattern = Pattern.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@\$!%=*?&])[A-Za-z\\d@\$!=%*?&]{8,}$")
+        return pattern.matcher(password).matches()
     }
 }

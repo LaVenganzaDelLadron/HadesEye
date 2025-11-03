@@ -2,21 +2,31 @@ package com.project.hadeseye.fragments
 
 import android.content.Intent
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.util.Log
+import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.project.hadeseye.R
-import com.project.hadeseye.ResultScanActivity
+import com.project.hadeseye.ResultScanUrlActivity
 import com.project.hadeseye.services.virusTotalServices.VTScanning
 import com.project.hadeseye.dialog.ShowDialog
+import com.project.hadeseye.services.virusTotalServices.hybridAnalysisServices.HAScanning
 import com.project.hadeseye.services.virusTotalServices.urlServices.URLScanning
 
 private const val ARG_PARAM1 = "param1"
@@ -34,9 +44,13 @@ class ScanFragment : Fragment() {
     private lateinit var btnScanUrl: Button
     private lateinit var btnStartFile: Button
     private lateinit var urlInput: EditText
+    private lateinit var recentActivityContainer: LinearLayout
+    private lateinit var databaseRef: DatabaseReference
+    private lateinit var auth: FirebaseAuth
     private var selectedFileUri: Uri? = null
     lateinit var showDialog: ShowDialog
     lateinit var vtScanning: VTScanning
+    lateinit var haScanning: HAScanning
     private lateinit var urlScanning: URLScanning
     private val ipRegex = Regex("^((25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(25[0-5]|2[0-4]\\d|[01]?\\d\\d?)$")
     private val urlRegex = Regex("^(https?://)?([\\w.-]+@)?([\\w.-]+)\\.([a-z]{2,})([/\\w .-]*)*/?$")
@@ -96,6 +110,7 @@ class ScanFragment : Fragment() {
         showDialog = ShowDialog(requireContext())
         vtScanning = VTScanning()
         urlScanning = URLScanning()
+        haScanning = HAScanning()
 
         viewFlipper = view.findViewById(R.id.viewFlipper)
         viewFlipper.displayedChild = VIEW_FILE_SCAN
@@ -108,8 +123,19 @@ class ScanFragment : Fragment() {
 
         urlInput = view.findViewById(R.id.urlInput)
         btnAddFile = view.findViewById(R.id.btnAddFile)
+        recentActivityContainer = view.findViewById(R.id.recentActivityContainer)
 
 
+        auth = FirebaseAuth.getInstance()
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            val uid = currentUser.uid
+            databaseRef = FirebaseDatabase.getInstance(
+                "https://hadeseye-c26c7-default-rtdb.firebaseio.com/"
+            ).getReference("users/scans/$uid/scans")
+
+            fetchRecentActivity()
+        }
 
 
 
@@ -151,99 +177,210 @@ class ScanFragment : Fragment() {
         return view
     }
 
+    private fun fetchRecentActivity() {
+        // Order by timestamp descending, limit to 3 most recent scans
+        databaseRef.orderByChild("timestamp").limitToLast(3)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val activities = mutableListOf<Map<String, String>>()
+
+                    for (scan in snapshot.children) {
+                        // Check which field exists and use it as display name
+                        val ip = scan.child("ip").getValue(String::class.java)
+                        val url = scan.child("url").getValue(String::class.java)
+                        val fileName = scan.child("file_name").getValue(String::class.java)
+                        val screenshotPath = scan.child("screenshotPath").getValue(String::class.java)
+
+                        // Priority: file_name > url > ip > screenshotPath
+                        val displayName = when {
+                            !fileName.isNullOrEmpty() -> fileName
+                            !url.isNullOrEmpty() -> url
+                            !ip.isNullOrEmpty() -> ip
+                            !screenshotPath.isNullOrEmpty() -> screenshotPath.substringAfterLast('/')
+                            else -> "Unknown Scan"
+                        }
+
+                        val status = scan.child("status").getValue(String::class.java) ?: "Unknown"
+                        activities.add(mapOf("name" to displayName, "status" to status))
+                    }
+
+                    // Reverse to show newest first
+                    activities.reverse()
+                    updateRecentActivityUI(activities)
+                }
+
+                override fun onCancelled(error: DatabaseError) {}
+            })
+    }
+
+
+    private fun updateRecentActivityUI(activities: List<Map<String, String>>) {
+        recentActivityContainer.removeAllViews()
+        val sizePx = (12 * resources.displayMetrics.density).toInt() // 12dp circle
+
+        for (activity in activities) {
+            val layout = LinearLayout(requireContext())
+            layout.orientation = LinearLayout.HORIZONTAL
+            layout.layoutParams = LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+            )
+            layout.gravity = Gravity.CENTER_VERTICAL
+            layout.setPadding(0, 12, 0, 12)
+
+            // Status Indicator
+            val statusIndicator = View(requireContext())
+            val params = LinearLayout.LayoutParams(sizePx, sizePx)
+            params.marginEnd = (16 * resources.displayMetrics.density).toInt()
+            statusIndicator.layoutParams = params
+
+            when (activity["status"]) {
+                "Safe" -> statusIndicator.setBackgroundResource(R.drawable.green_circle)
+                "Threat" -> statusIndicator.setBackgroundResource(R.drawable.red_circle)
+                "Malicious" -> statusIndicator.setBackgroundResource(R.drawable.yellow_circle)
+                else -> statusIndicator.setBackgroundColor(Color.GRAY)
+            }
+
+            // Activity Name
+            val tvName = TextView(requireContext())
+            tvName.layoutParams = LinearLayout.LayoutParams(
+                LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT
+            )
+            tvName.text = activity["name"]
+            tvName.setTextColor(Color.WHITE)
+            tvName.textSize = 14f
+
+            layout.addView(statusIndicator)
+            layout.addView(tvName)
+
+            // Divider
+            val divider = View(requireContext())
+            val dividerParams = LinearLayout.LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                (1 * resources.displayMetrics.density).toInt()
+            )
+            divider.layoutParams = dividerParams
+            divider.setBackgroundColor(Color.parseColor("#333333"))
+
+            recentActivityContainer.addView(layout)
+            recentActivityContainer.addView(divider)
+        }
+    }
 
 
     private fun vTuSScanUrl() {
         val url = urlInput.text.toString().trim()
         if (url.isEmpty()) {
             showDialog.invalidDialog("Error", "Field cannot be empty")
+            return
         }
 
-        showDialog.loadingDialog("Just wait for a moment")
+        // Store the dialog instance
+        val loading = showDialog.loadingDialog("Scanning URL with multiple engines...")
+
         Thread {
             try {
                 val vtResult = vtScanning.vt_url_scan(requireContext(), url)
                 val usResult = urlScanning.us_url_scan(requireContext(), url)
+                val haResult = haScanning.ha_url_scan(requireContext(), url)
+
                 val screenshotPath = usResult["screenshot_path"]
 
-
-                val intent = Intent(requireContext(), ResultScanActivity::class.java)
-                intent.putExtra("malicious", vtResult["malicious"])
-                intent.putExtra("harmless", vtResult["harmless"])
-                intent.putExtra("suspicious", vtResult["suspicious"])
-                intent.putExtra("undetected", vtResult["undetected"])
-                intent.putExtra("screenshot_path", screenshotPath)
+                val intent = Intent(requireContext(), ResultScanUrlActivity::class.java).apply {
+                    putExtra("url", url)
+                    putExtra("malicious", vtResult["malicious"])
+                    putExtra("harmless", vtResult["harmless"])
+                    putExtra("suspicious", vtResult["suspicious"])
+                    putExtra("undetected", vtResult["undetected"])
+                    putExtra("threat_level", haResult["threat_level"])
+                    putExtra("threat_score", haResult["threat_score"])
+                    putExtra("verdict", haResult["verdict"])
+                    putExtra("screenshot_path", screenshotPath)
+                }
 
                 requireActivity().runOnUiThread {
-                    Toast.makeText(requireContext(), "US Result: $usResult", Toast.LENGTH_LONG).show()
-                    Log.d("URLScanning", "US Result: $usResult")
-                    showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
+                    loading.dismissWithAnimation()
                     startActivity(intent)
                 }
 
             } catch (e: Exception) {
                 requireActivity().runOnUiThread {
-                    showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
+                    loading.dismissWithAnimation()
                     Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    Log.e("ScanFragment", "Error: ${e.message}", e)
                 }
             }
         }.start()
     }
+
+
     private fun vtScanIp() {
         val ip = urlInput.text.toString().trim()
         if (ip.isEmpty()) {
             showDialog.invalidDialog("Error", "Field cannot be empty")
+            return
         }
 
-        showDialog.loadingDialog("Just wait for a moment")
+        val loading = showDialog.loadingDialog("Scanning IP Address...")
         Thread {
             try {
-                val result = vtScanning.vt_ip_scan(requireContext(), ip)
+                val vtResult = vtScanning.vt_ip_scan(requireContext(), ip)
+                val haResult = haScanning.ha_ip_scan(requireContext(), ip)  // ✅ add Hybrid Analysis IP scan
 
-                val intent = Intent(requireContext(), ResultScanActivity::class.java)
-                intent.putExtra("malicious", result["malicious"])
-                intent.putExtra("harmless", result["harmless"])
-                intent.putExtra("suspicious", result["suspicious"])
-                intent.putExtra("undetected", result["undetected"])
+                val intent = Intent(requireContext(), ResultScanUrlActivity::class.java).apply {
+                    putExtra("ip", ip)
+                    putExtra("malicious", vtResult["malicious"])
+                    putExtra("harmless", vtResult["harmless"])
+                    putExtra("suspicious", vtResult["suspicious"])
+                    putExtra("undetected", vtResult["undetected"])
+                    putExtra("threat_level", haResult["threat_level"])
+                    putExtra("threat_score", haResult["threat_score"])
+                    putExtra("verdict", haResult["verdict"])
+                }
 
                 requireActivity().runOnUiThread {
-                    showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
+                    loading.dismissWithAnimation()
                     startActivity(intent)
                 }
 
             } catch (e: Exception) {
                 requireActivity().runOnUiThread {
-                    showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
+                    loading.dismissWithAnimation()
                     Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    Log.e("ScanFragment", "IP Scan Error: ${e.message}", e)
                 }
             }
         }.start()
     }
+
 
     private fun vtFileScan() {
         if (selectedFileUri == null) {
             showDialog.invalidDialog("Error", "No file selected")
             return
         }
-        showDialog.loadingDialog("Just wait for a moment")
+        val loading = showDialog.loadingDialog("Scanning File...")
         Thread {
             try {
                 val result = vtScanning.vt_file_scan(requireContext(), selectedFileUri)
 
-                val intent = Intent(requireContext(), ResultScanActivity::class.java)
+                val intent = Intent(requireContext(), ResultScanUrlActivity::class.java)
+                intent.putExtra("file_name", getFileName(selectedFileUri!!))
                 intent.putExtra("malicious", result["malicious"])
                 intent.putExtra("harmless", result["harmless"])
                 intent.putExtra("suspicious", result["suspicious"])
                 intent.putExtra("undetected", result["undetected"])
 
                 requireActivity().runOnUiThread {
-                    showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
+                    loading.dismissWithAnimation()
                     startActivity(intent)
                 }
 
+
             } catch (e: Exception) {
                 requireActivity().runOnUiThread {
-                    showDialog.loadingDialog("Scanning Url.....").dismissWithAnimation()
+                    showDialog.loadingDialog("Scanning File.....").dismissWithAnimation()
                     Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }

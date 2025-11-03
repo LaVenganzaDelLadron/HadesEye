@@ -15,13 +15,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.HadesEye">
         <activity
+            android:name=".UpdateInfoActivity"
+            android:exported="false" />
+        <activity
             android:name=".FullScreenImageActivity"
             android:exported="false" />
         <activity
             android:name=".FullScreeenImageActivity"
             android:exported="false" />
         <activity
-            android:name=".ResultScanActivity"
+            android:name=".ResultScanUrlActivity"
             android:exported="false" />
         <activity
             android:name=".SignupActivity"

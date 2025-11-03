@@ -31,8 +31,8 @@
                 <!-- Profile Image -->
                 <ImageView
                     android:id="@+id/profileImage"
-                    android:layout_width="150dp"
-                    android:layout_height="150dp"
+                    android:layout_width="120dp"
+                    android:layout_height="120dp"
                     android:scaleType="centerCrop"
                     android:src="@drawable/malware"
                     android:background="@drawable/circle_background"
@@ -58,22 +58,7 @@
                     android:text="john.doe@example.com"
                     android:textColor="#B0B3B8"
                     android:textSize="14sp"
-                    android:layout_marginBottom="16dp" />
-
-                <!-- Edit Profile Button -->
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/btnEdit"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:paddingStart="24dp"
-                    android:paddingEnd="24dp"
-                    android:backgroundTint="#22E57A"
-                    android:background="@drawable/button_outline_green"
-                    android:text="Edit Profile"
-                    android:textAllCaps="false"
-                    android:textColor="#FFFFFF"
-                    android:elevation="2dp" />
+                    android:layout_marginBottom="12dp" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -103,170 +88,60 @@
 
                 <TextView
                     android:id="@+id/tvPhoneNumber"
-                    android:text="Phone: +63 987 654 3210"
-                    android:layout_height="20dp"
-                    android:layout_width="200dp"
+                    android:text="Phone: N/A"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp"
-                    android:layout_marginBottom="4dp"/>
+                    android:layout_marginBottom="6dp" />
 
                 <TextView
                     android:id="@+id/tvAddress"
-                    android:text="Address: Cebu City, Philippines"
-                    android:layout_height="20dp"
-                    android:layout_width="200dp"
+                    android:text="Address: N/A"
+                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
                     android:textColor="#FFFFFF"
                     android:textSize="14sp"
-                    android:layout_marginBottom="4dp" />
+                    android:layout_marginBottom="6dp" />
 
-                <TextView
-                    android:id="@+id/tvMemberSince"
-                    android:text="Member since: October 2025"
-                    android:layout_height="20dp"
-                    android:layout_width="200dp"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp" />
-
-                <TextView
-                    android:id="@+id/tvRole"
-                    android:text="Role: Student"
-                    android:layout_height="20dp"
-                    android:layout_width="200dp"
-                    android:textColor="#FFFFFF"
-                    android:textSize="14sp"/>
 
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
-
+        <!-- Action Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:layout_marginTop="30dp"
+            android:gravity="center">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Settings"
-                android:textColor="#22E57A"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="12dp" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#2A2E34"
-                android:layout_marginVertical="10dp" />
-
-            <!-- Settings Items -->
-            <LinearLayout
-                android:id="@+id/llNotifications"
+            <!-- Edit Profile Button -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnEdit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingVertical="10dp">
+                android:layout_marginBottom="12dp"
+                android:backgroundTint="#22E57A"
+                android:background="@drawable/button_outline_green"
+                android:text="Edit Profile"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:padding="12dp"
+                android:elevation="2dp" />
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="🔔 Notifications"
-                    android:textColor="#FFFFFF"
-                    android:textSize="15sp" />
-
-                <Switch
-                    android:id="@+id/switchNotifications"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:thumbTint="#22E57A"
-                    android:trackTint="#444"
-                    tools:ignore="UseSwitchCompatOrMaterialXml" />
-            </LinearLayout>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="#2A2E34"
-                android:layout_marginVertical="10dp" />
-
-            <!-- Action Buttons -->
-            <LinearLayout
-                android:id="@+id/llPrivacy"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingVertical="10dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackground">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="🔒 Privacy Settings"
-                    android:textColor="#FFFFFF"
-                    android:textSize="15sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/llHelp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingVertical="10dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackground">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="💬 Help Support"
-                    android:textColor="#FFFFFF"
-                    android:textSize="15sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/llRate"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingVertical="10dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackground">
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="20dp">
-
+            <!-- Logout Button -->
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnLogout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#D93B3B"
+                android:background="@drawable/button_outline_red"
                 android:text="Logout"
                 android:textColor="#FFFFFF"
                 android:textAllCaps="false"
-                android:background="@drawable/button_outline_red"
                 android:padding="12dp"
-                android:paddingTop="40dp"
                 android:elevation="2dp" />
         </LinearLayout>
-
     </LinearLayout>
 </ScrollView>
