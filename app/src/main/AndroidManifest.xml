@@ -37,7 +37,7 @@
             android:name=".FullScreeenImageActivity"
             android:exported="false" />
         <activity
-            android:name=".ResultScanUrlActivity"
+            android:name=".ResultScanActivity"
             android:exported="false" />
         <activity
             android:name=".SignupActivity"

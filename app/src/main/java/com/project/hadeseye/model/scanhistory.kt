@@ -5,5 +5,6 @@ data class ScanHistory(
     val status: String,
     val date: String,
     val fileName: String,
-    val ip: String? = null
+    val ip: String? = null,
+    val domain: String
 )

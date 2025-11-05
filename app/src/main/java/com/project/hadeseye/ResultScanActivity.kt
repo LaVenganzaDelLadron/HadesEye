@@ -3,7 +3,6 @@ package com.project.hadeseye
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.google.android.material.appbar.MaterialToolbar
@@ -11,7 +10,7 @@ import com.project.hadeseye.databinding.ActivityResultScanBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 
-class ResultScanUrlActivity : AppCompatActivity() {
+class ResultScanActivity : AppCompatActivity() {
     private lateinit var binding: ActivityResultScanBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,6 +26,7 @@ class ResultScanUrlActivity : AppCompatActivity() {
 
         val url = intent.getStringExtra("url")
         val ip = intent.getStringExtra("ip")
+        val domain = intent.getStringExtra("domain")
         val fineName = intent.getStringExtra("file_name")
         val malicious = intent.getStringExtra("malicious")
         val harmless = intent.getStringExtra("harmless")
@@ -71,7 +71,7 @@ class ResultScanUrlActivity : AppCompatActivity() {
         val status = when {
             maliciousCount >= 10 -> "Malicious"
             maliciousCount >= 2 && suspiciousCount >= 1 -> "Threat"
-            maliciousCount >= 1 -> "Threat"
+            maliciousCount >= 2 -> "Threat"
             else -> "Safe"
         }
 
@@ -79,6 +79,7 @@ class ResultScanUrlActivity : AppCompatActivity() {
         val scanData = mapOf(
             "url" to url,
             "ip" to ip,
+            "domain" to domain,
             "file_name" to fineName,
             "malicious" to maliciousCount,
             "harmless" to (harmless?.toIntOrNull() ?: 0),

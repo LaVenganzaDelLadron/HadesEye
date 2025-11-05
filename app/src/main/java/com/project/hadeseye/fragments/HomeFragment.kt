@@ -137,6 +137,7 @@ class HomeFragment : Fragment() {
                         val ip = scan.child("ip").getValue(String::class.java)
                         val url = scan.child("url").getValue(String::class.java)
                         val fileName = scan.child("file_name").getValue(String::class.java)
+                        val domain = scan.child("domain").getValue(String::class.java)
                         val screenshotPath = scan.child("screenshotPath").getValue(String::class.java)
 
                         // Priority: file_name > url > ip > screenshotPath
@@ -144,6 +145,7 @@ class HomeFragment : Fragment() {
                             !fileName.isNullOrEmpty() -> fileName
                             !url.isNullOrEmpty() -> url
                             !ip.isNullOrEmpty() -> ip
+                            !domain.isNullOrEmpty() -> domain
                             !screenshotPath.isNullOrEmpty() -> screenshotPath.substringAfterLast('/')
                             else -> "Unknown Scan"
                         }

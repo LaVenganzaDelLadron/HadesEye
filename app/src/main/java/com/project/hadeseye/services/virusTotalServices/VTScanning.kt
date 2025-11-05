@@ -51,6 +51,25 @@ class VTScanning {
         return map
     }
 
+    fun vt_domain_scan(context: Context, scanDomain: String): Map<String, String> {
+        if (!Python.isStarted()) {
+            Python.start(AndroidPlatform(context))
+        }
+
+        val py = Python.getInstance()
+        val pyModule = py.getModule("vtScanning")
+        val result = pyModule.callAttr("scan_domain", virus_total_api.apikey, scanDomain)
+
+        val json = result.toString()
+        val jsonObj = JSONObject(json)
+        val map = mutableMapOf<String, String>()
+        jsonObj.keys().forEach { key ->
+            map[key] = jsonObj.getString(key)
+        }
+        return map
+    }
+
+
     fun vt_file_scan(context: Context, fileUri: Uri?): Map<String, String> {
         if (!Python.isStarted()) {
             Python.start(AndroidPlatform(context))

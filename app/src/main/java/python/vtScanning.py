@@ -106,3 +106,44 @@ def scan_file(api_key, file_path):
 
     return json.dumps(result)
 
+def scan_domain(api_key, domain):
+    headers = {"x-apikey": api_key}
+    result = {}
+
+    try:
+        print(f"Scanning domain: {domain}")
+        response = requests.get(f"{VT_BASE_URL}/domains/{domain}", headers=headers)
+        response.raise_for_status()
+
+        data = response.json().get("data", {}).get("attributes", {})
+        last_analysis_stats = data.get("last_analysis_stats", {})
+
+        # Extract info
+        result = {
+            "domain": domain,
+            "malicious": last_analysis_stats.get("malicious", 0),
+            "harmless": last_analysis_stats.get("harmless", 0),
+            "suspicious": last_analysis_stats.get("suspicious", 0),
+            "undetected": last_analysis_stats.get("undetected", 0),
+            "categories": data.get("categories", {}),
+            "reputation": data.get("reputation", 0),
+            "whois": data.get("whois", "No WHOIS data available.")
+        }
+
+        # Classification
+        malicious = last_analysis_stats.get("malicious", 0)
+        suspicious = last_analysis_stats.get("suspicious", 0)
+
+        if malicious >= 5:
+            result["verdict"] = "🔥 Malicious domain detected!"
+        elif malicious >= 2 or suspicious >= 1:
+            result["verdict"] = "⚠️ Possibly dangerous domain."
+        else:
+            result["verdict"] = "✅ Clean domain — no threats found."
+
+    except requests.exceptions.RequestException as e:
+        result = {"error": f"Request failed: {e}"}
+    except KeyError:
+        result = {"error": "Unexpected response from VirusTotal"}
+
+    return json.dumps(result, indent=2)

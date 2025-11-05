@@ -111,13 +111,14 @@ class ReportFragment : Fragment() {
                     val url = scan.child("url").getValue(String::class.java) ?: "N/A"
                     val fileName = scan.child("file_name").getValue(String::class.java) ?: "N/A"
                     val ip = scan.child("ip").getValue(String::class.java) ?: "N/A"
+                    val domain = scan.child("domain").getValue(String::class.java) ?: "N/A"
 
 
                     // Safe conversion for timestamp
                     val timestampValue = scan.child("timestamp").value
                     val date = timestampValue?.toString() ?: "Unknown"
 
-                    val item = ScanHistory(url, status, date, fileName, ip)
+                    val item = ScanHistory(url, status, date, fileName, ip, domain)
 
                     allList.add(item)
                     when (status) {

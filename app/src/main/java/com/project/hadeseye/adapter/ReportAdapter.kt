@@ -29,6 +29,7 @@ class ReportAdapter(private val reportList: MutableList<ScanHistory>) :
             !item.ip.isNullOrBlank() && item.ip != "N/A" && item.ip != "Unknown" -> "IP: ${item.ip}"
             !item.url.isNullOrBlank() && item.url != "N/A" && item.url != "Unknown" -> "URL: ${item.url}"
             !item.fileName.isNullOrBlank() && item.fileName != "N/A" -> "File: ${item.fileName}"
+            !item.domain.isNullOrBlank() && item.domain != "N/A" -> "Domain: ${item.domain}"
             else -> "Unknown Scan"
         }
 

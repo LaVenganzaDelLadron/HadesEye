@@ -23,7 +23,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.project.hadeseye.R
-import com.project.hadeseye.ResultScanUrlActivity
+import com.project.hadeseye.ResultScanActivity
 import com.project.hadeseye.services.virusTotalServices.VTScanning
 import com.project.hadeseye.dialog.ShowDialog
 import com.project.hadeseye.services.virusTotalServices.hybridAnalysisServices.HAScanning
@@ -54,6 +54,8 @@ class ScanFragment : Fragment() {
     private lateinit var urlScanning: URLScanning
     private val ipRegex = Regex("^((25[0-5]|2[0-4]\\d|[01]?\\d\\d?)\\.){3}(25[0-5]|2[0-4]\\d|[01]?\\d\\d?)$")
     private val urlRegex = Regex("^(https?://)?([\\w.-]+@)?([\\w.-]+)\\.([a-z]{2,})([/\\w .-]*)*/?$")
+    private val domainRegex = Regex("^(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}$")
+
 
     private val filePickerLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -151,11 +153,14 @@ class ScanFragment : Fragment() {
                 ipRegex.matches(input) -> {
                     vtScanIp()
                 }
+                domainRegex.matches(input) -> {
+                    vTHaDomainScan()
+                }
                 urlRegex.matches(input) -> {
                     vTuSScanUrl()
                 }
                 else -> {
-                    showDialog.invalidDialog("Error", "Invalid URL or IP format")
+                    showDialog.invalidDialog("Error", "Invalid URL, Domain, or IP format")
                 }
             }
         }
@@ -189,6 +194,7 @@ class ScanFragment : Fragment() {
                         val ip = scan.child("ip").getValue(String::class.java)
                         val url = scan.child("url").getValue(String::class.java)
                         val fileName = scan.child("file_name").getValue(String::class.java)
+                        val domain = scan.child("domain").getValue(String::class.java)
                         val screenshotPath = scan.child("screenshotPath").getValue(String::class.java)
 
                         // Priority: file_name > url > ip > screenshotPath
@@ -196,6 +202,7 @@ class ScanFragment : Fragment() {
                             !fileName.isNullOrEmpty() -> fileName
                             !url.isNullOrEmpty() -> url
                             !ip.isNullOrEmpty() -> ip
+                            !domain.isNullOrEmpty() -> domain
                             !screenshotPath.isNullOrEmpty() -> screenshotPath.substringAfterLast('/')
                             else -> "Unknown Scan"
                         }
@@ -277,7 +284,7 @@ class ScanFragment : Fragment() {
         }
 
         // Store the dialog instance
-        val loading = showDialog.loadingDialog("Scanning URL with multiple engines...")
+        val loading = showDialog.loadingDialog("Scanning URL")
 
         Thread {
             try {
@@ -287,7 +294,7 @@ class ScanFragment : Fragment() {
 
                 val screenshotPath = usResult["screenshot_path"]
 
-                val intent = Intent(requireContext(), ResultScanUrlActivity::class.java).apply {
+                val intent = Intent(requireContext(), ResultScanActivity::class.java).apply {
                     putExtra("url", url)
                     putExtra("malicious", vtResult["malicious"])
                     putExtra("harmless", vtResult["harmless"])
@@ -328,7 +335,7 @@ class ScanFragment : Fragment() {
                 val vtResult = vtScanning.vt_ip_scan(requireContext(), ip)
                 val haResult = haScanning.ha_ip_scan(requireContext(), ip)  // ✅ add Hybrid Analysis IP scan
 
-                val intent = Intent(requireContext(), ResultScanUrlActivity::class.java).apply {
+                val intent = Intent(requireContext(), ResultScanActivity::class.java).apply {
                     putExtra("ip", ip)
                     putExtra("malicious", vtResult["malicious"])
                     putExtra("harmless", vtResult["harmless"])
@@ -354,6 +361,52 @@ class ScanFragment : Fragment() {
         }.start()
     }
 
+    private fun vTHaDomainScan() {
+        val domain = urlInput.text.toString().trim()
+        if (domain.isEmpty()) {
+            showDialog.invalidDialog("Error", "Field cannot be empty")
+            return
+        }
+
+        val loading = showDialog.loadingDialog("Scanning Domain...")
+
+        Thread {
+            try {
+                val vtResult = vtScanning.vt_domain_scan(requireContext(), domain)
+                val usResult = urlScanning.us_url_scan(requireContext(), domain)
+                val haResult = haScanning.ha_domain_scan(requireContext(), domain)
+
+                val screenshotPath = usResult["screenshot_path"]
+
+                val intent = Intent(requireContext(), ResultScanActivity::class.java).apply {
+                    putExtra("domain", domain)
+                    putExtra("malicious", vtResult["malicious"])
+                    putExtra("harmless", vtResult["harmless"])
+                    putExtra("suspicious", vtResult["suspicious"])
+                    putExtra("undetected", vtResult["undetected"])
+                    putExtra("threat_level", haResult["threat_level"])
+                    putExtra("threat_score", haResult["threat_score"])
+                    putExtra("verdict", haResult["verdict"])
+                    putExtra("screenshot_path", screenshotPath)
+                }
+
+                requireActivity().runOnUiThread {
+                    loading.dismissWithAnimation()
+                    startActivity(intent)
+                }
+
+            } catch (e: Exception) {
+                requireActivity().runOnUiThread {
+                    loading.dismissWithAnimation()
+                    Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    Log.e("ScanFragment", "Error: ${e.message}", e)
+                }
+            }
+        }.start()
+    }
+
+
+
 
     private fun vTHaFileScan() {
         if (selectedFileUri == null) {
@@ -366,7 +419,7 @@ class ScanFragment : Fragment() {
                 val result = vtScanning.vt_file_scan(requireContext(), selectedFileUri)
                 val haResult = haScanning.ha_file_scan(requireContext(), selectedFileUri)
 
-                val intent = Intent(requireContext(), ResultScanUrlActivity::class.java)
+                val intent = Intent(requireContext(), ResultScanActivity::class.java)
                 intent.putExtra("file_name", getFileName(selectedFileUri!!))
                 intent.putExtra("malicious", result["malicious"])
                 intent.putExtra("harmless", result["harmless"])
@@ -375,6 +428,7 @@ class ScanFragment : Fragment() {
                 intent.putExtra("threat_level", haResult["threat_level"]?: "N/A")
                 intent.putExtra("threat_score", haResult["threat_score"]?: "N/A")
                 intent.putExtra("verdict", haResult["verdict"] ?: "N/A")
+
 
                 requireActivity().runOnUiThread {
                     loading.dismissWithAnimation()
