@@ -142,9 +142,17 @@ class ReportFragment : Fragment() {
 
 
     private fun filterReports(query: String) {
-        val filtered = allList.filter {
-            it.url.contains(query, ignoreCase = true)
+        val filterFun: (ScanHistory) -> Boolean = { item ->
+            item.url.contains(query, ignoreCase = true) ||
+                    item.domain.contains(query, ignoreCase = true) ||
+                    item.ip.contains(query, ignoreCase = true) ||
+                    item.fileName.contains(query, ignoreCase = true)
         }
-        recyclerAll.adapter = ReportAdapter(filtered.toMutableList())
+
+        recyclerAll.adapter = ReportAdapter(allList.filter(filterFun).toMutableList())
+        recyclerSafe.adapter = ReportAdapter(safeList.filter(filterFun).toMutableList())
+        recyclerThreat.adapter = ReportAdapter(threatList.filter(filterFun).toMutableList())
+        recyclerMalicious.adapter = ReportAdapter(maliciousList.filter(filterFun).toMutableList())
     }
+
 }

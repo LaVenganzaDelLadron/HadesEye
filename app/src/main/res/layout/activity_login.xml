@@ -4,7 +4,7 @@
     android:orientation="vertical"
     android:gravity="center_horizontal"
     android:padding="24dp"
-    android:background="#1A1F26">
+    android:background="#020D15">
 
     <!-- Logo -->
     <ImageView
