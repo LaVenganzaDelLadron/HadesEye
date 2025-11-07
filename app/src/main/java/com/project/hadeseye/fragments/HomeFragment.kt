@@ -3,6 +3,7 @@ package com.project.hadeseye.fragments
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
@@ -59,6 +60,7 @@ class HomeFragment : Fragment() {
 
             fetchUserScanCounts()
             fetchRecentActivity()
+            fetchTopSearches()
         }
 
         val btnStartScan = view.findViewById<View>(R.id.btnStartScan)
@@ -217,4 +219,106 @@ class HomeFragment : Fragment() {
             recentActivityContainer.addView(divider)
         }
     }
+
+    private fun fetchTopSearches() {
+        val globalRef = FirebaseDatabase.getInstance(
+            "https://hadeseye-c26c7-default-rtdb.firebaseio.com/"
+        ).getReference("users/scans")
+
+        globalRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val searchCount = mutableMapOf<String, Int>()
+
+                // Loop through each user ID under "users/scans"
+                for (userSnap in snapshot.children) {
+                    val scansRef = userSnap.child("scans")
+
+                    for (scan in scansRef.children) {
+                        val url = scan.child("url").getValue(String::class.java)
+                        val ip = scan.child("ip").getValue(String::class.java)
+                        val domain = scan.child("domain").getValue(String::class.java)
+                        val fileName = scan.child("file_name").getValue(String::class.java)
+
+                        val searchKey = when {
+                            !url.isNullOrEmpty() -> url
+                            !domain.isNullOrEmpty() -> domain
+                            !ip.isNullOrEmpty() -> ip
+                            !fileName.isNullOrEmpty() -> fileName
+                            else -> null
+                        }
+
+                        if (searchKey != null) {
+                            searchCount[searchKey] = (searchCount[searchKey] ?: 0) + 1
+                        }
+                    }
+                }
+
+                // Sort descending by frequency and get top 10
+                val top10 = searchCount.entries
+                    .sortedByDescending { it.value }
+                    .take(10)
+
+                updateTopSearchesUI(top10)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("FirebaseError", "Error: ${error.message}")
+            }
+        })
+    }
+
+
+    private fun updateTopSearchesUI(topList: List<Map.Entry<String, Int>>) {
+        val container = view?.findViewById<LinearLayout>(R.id.layoutTopSearchesList)
+        container?.removeAllViews()
+
+        var rank = 1
+        for ((term, count) in topList) {
+            val itemLayout = LinearLayout(requireContext())
+            itemLayout.orientation = LinearLayout.HORIZONTAL
+            itemLayout.gravity = Gravity.CENTER_VERTICAL
+            itemLayout.setPadding(0, 8, 0, 8)
+
+            val tvRank = TextView(requireContext())
+            tvRank.layoutParams = LinearLayout.LayoutParams(80, ViewGroup.LayoutParams.WRAP_CONTENT)
+            tvRank.text = "#$rank"
+            tvRank.setTextColor(Color.parseColor("#1DB954"))
+            tvRank.textSize = 14f
+            tvRank.setPadding(8, 0, 8, 0)
+
+            val tvTerm = TextView(requireContext())
+            tvTerm.layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            tvTerm.text = term
+            tvTerm.setTextColor(Color.WHITE)
+            tvTerm.textSize = 14f
+
+            val tvCount = TextView(requireContext())
+            tvCount.layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            tvCount.text = ""
+            tvCount.setTextColor(Color.GRAY)
+            tvCount.textSize = 12f
+
+            itemLayout.addView(tvRank)
+            itemLayout.addView(tvTerm)
+            itemLayout.addView(tvCount)
+
+            container?.addView(itemLayout)
+
+            // Divider
+            val divider = View(requireContext())
+            divider.layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                (1 * resources.displayMetrics.density).toInt()
+            )
+            divider.setBackgroundColor(Color.parseColor("#333333"))
+            container?.addView(divider)
+
+            rank++
+        }
+    }
+
+
 }

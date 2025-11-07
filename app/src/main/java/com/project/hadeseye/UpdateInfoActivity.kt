@@ -7,11 +7,13 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.project.hadeseye.databinding.ActivityUpdateInfoBinding
+import com.project.hadeseye.dialog.ShowDialog
 
 class UpdateInfoActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityUpdateInfoBinding
     private lateinit var auth: FirebaseAuth
+    private lateinit var showDialog: ShowDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,6 +22,7 @@ class UpdateInfoActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
         val currentUser = auth.currentUser
+        showDialog = ShowDialog(this)
 
         if (currentUser != null) {
             Log.d("UpdateInfoActivity", "Current user UID: ${currentUser.uid}")
@@ -38,8 +41,13 @@ class UpdateInfoActivity : AppCompatActivity() {
             Log.d("UpdateInfoActivity", "Name: $name, Phone: $phone, Address: $address")
 
             if (name.isEmpty() || phone.isEmpty() || address.isEmpty()) {
-                Toast.makeText(this, "Please fill out all fields", Toast.LENGTH_SHORT).show()
+                showDialog.invalidDialog("Empty Fields","Please fill in all fields.")
                 Log.w("UpdateInfoActivity", "Update failed: one or more fields are empty.")
+                return@setOnClickListener
+            }
+            if (phone.length != 11) {
+                showDialog.invalidDialog("Phone","Phone number must be 11 digits")
+                Log.w("UpdateInfoActivity", "Update failed: phone number is not 11 digits.")
                 return@setOnClickListener
             }
 
