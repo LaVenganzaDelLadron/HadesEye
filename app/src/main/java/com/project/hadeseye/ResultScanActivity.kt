@@ -27,7 +27,7 @@ class ResultScanActivity : AppCompatActivity() {
         val url = intent.getStringExtra("url")
         val ip = intent.getStringExtra("ip")
         val domain = intent.getStringExtra("domain")
-        val fineName = intent.getStringExtra("file_name")
+        val fileName = intent.getStringExtra("file_name")
         val malicious = intent.getStringExtra("malicious")
         val harmless = intent.getStringExtra("harmless")
         val suspicious = intent.getStringExtra("suspicious")
@@ -70,8 +70,7 @@ class ResultScanActivity : AppCompatActivity() {
 
         val status = when {
             maliciousCount >= 10 -> "Malicious"
-            maliciousCount >= 2 && suspiciousCount >= 1 -> "Threat"
-            maliciousCount >= 2 -> "Threat"
+            maliciousCount >= 1 || suspiciousCount >= 1 -> "Threat"
             else -> "Safe"
         }
 
@@ -80,7 +79,7 @@ class ResultScanActivity : AppCompatActivity() {
             "url" to url,
             "ip" to ip,
             "domain" to domain,
-            "file_name" to fineName,
+            "file_name" to fileName,
             "malicious" to maliciousCount,
             "harmless" to (harmless?.toIntOrNull() ?: 0),
             "suspicious" to suspiciousCount,
@@ -106,11 +105,11 @@ class ResultScanActivity : AppCompatActivity() {
                     }
                     "Malicious" -> {
                         binding.statusText.text = "⚠️ Malicious"
-                        binding.statusText.setTextColor(getColor(R.color.yellow))
+                        binding.statusText.setTextColor(getColor(R.color.red))
                     }
                     "Threat" -> {
                         binding.statusText.text = "🚨 Threat"
-                        binding.statusText.setTextColor(getColor(R.color.red))
+                        binding.statusText.setTextColor(getColor(R.color.yellow))
                     }
                 }
             }

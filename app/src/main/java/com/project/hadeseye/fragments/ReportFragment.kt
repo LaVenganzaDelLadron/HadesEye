@@ -80,6 +80,8 @@ class ReportFragment : Fragment() {
             fetchReports()
         }
 
+
+
         // Button Listeners
         btnAll.setOnClickListener { viewFlipper.displayedChild = 0 }
         btnSafe.setOnClickListener { viewFlipper.displayedChild = 1 }
@@ -107,18 +109,16 @@ class ReportFragment : Fragment() {
                 maliciousList.clear()
 
                 for (scan in snapshot.children) {
+                    val scanId = scan.key ?: continue
                     val status = scan.child("status").getValue(String::class.java) ?: "Unknown"
                     val url = scan.child("url").getValue(String::class.java) ?: "N/A"
                     val fileName = scan.child("file_name").getValue(String::class.java) ?: "N/A"
                     val ip = scan.child("ip").getValue(String::class.java) ?: "N/A"
                     val domain = scan.child("domain").getValue(String::class.java) ?: "N/A"
-
-
-                    // Safe conversion for timestamp
                     val timestampValue = scan.child("timestamp").value
                     val date = timestampValue?.toString() ?: "Unknown"
 
-                    val item = ScanHistory(url, status, date, fileName, ip, domain)
+                    val item = ScanHistory(url, status, date, fileName, ip, domain, scanId)
 
                     allList.add(item)
                     when (status) {
@@ -128,10 +128,10 @@ class ReportFragment : Fragment() {
                     }
                 }
 
-                recyclerAll.adapter = ReportAdapter(allList)
-                recyclerSafe.adapter = ReportAdapter(safeList)
-                recyclerThreat.adapter = ReportAdapter(threatList)
-                recyclerMalicious.adapter = ReportAdapter(maliciousList)
+                recyclerAll.adapter = ReportAdapter(requireContext(), databaseRef, allList)
+                recyclerSafe.adapter = ReportAdapter(requireContext(), databaseRef, safeList)
+                recyclerThreat.adapter = ReportAdapter(requireContext(), databaseRef, threatList)
+                recyclerMalicious.adapter = ReportAdapter(requireContext(), databaseRef, maliciousList)
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -139,6 +139,8 @@ class ReportFragment : Fragment() {
             }
         })
     }
+
+
 
 
     private fun filterReports(query: String) {
@@ -149,10 +151,15 @@ class ReportFragment : Fragment() {
                     item.fileName.contains(query, ignoreCase = true)
         }
 
-        recyclerAll.adapter = ReportAdapter(allList.filter(filterFun).toMutableList())
-        recyclerSafe.adapter = ReportAdapter(safeList.filter(filterFun).toMutableList())
-        recyclerThreat.adapter = ReportAdapter(threatList.filter(filterFun).toMutableList())
-        recyclerMalicious.adapter = ReportAdapter(maliciousList.filter(filterFun).toMutableList())
+        val filterAllList = allList.filter(filterFun)
+        val filterSafeList = safeList.filter(filterFun)
+        val filterThreatList = threatList.filter(filterFun)
+        val filterMaliciousList = maliciousList.filter(filterFun)
+
+        recyclerAll.adapter = ReportAdapter(requireContext(), databaseRef, filterAllList.toMutableList())
+        recyclerSafe.adapter = ReportAdapter(requireContext(), databaseRef, filterSafeList.toMutableList())
+        recyclerThreat.adapter = ReportAdapter(requireContext(), databaseRef, filterThreatList.toMutableList())
+        recyclerMalicious.adapter = ReportAdapter(requireContext(), databaseRef, filterMaliciousList.toMutableList())
     }
 
 }

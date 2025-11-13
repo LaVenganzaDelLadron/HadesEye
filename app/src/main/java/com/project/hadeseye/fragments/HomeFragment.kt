@@ -188,8 +188,8 @@ class HomeFragment : Fragment() {
 
             when (activity["status"]) {
                 "Safe" -> statusIndicator.setBackgroundResource(R.drawable.green_circle)
-                "Threat" -> statusIndicator.setBackgroundResource(R.drawable.red_circle)
-                "Malicious" -> statusIndicator.setBackgroundResource(R.drawable.yellow_circle)
+                "Threat" -> statusIndicator.setBackgroundResource(R.drawable.yellow_circle)
+                "Malicious" -> statusIndicator.setBackgroundResource(R.drawable.red_circle)
                 else -> statusIndicator.setBackgroundColor(Color.GRAY)
             }
 

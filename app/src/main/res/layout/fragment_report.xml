@@ -91,7 +91,7 @@
                     android:layout_weight="1"
                     android:layout_marginHorizontal="8dp"
                     android:text="Threat"
-                    android:background="@drawable/button_outline_red"
+                    android:background="@drawable/button_outline_yellow"
                     android:textColor="@android:color/white"
                     android:textStyle="bold"
                     android:textSize="10sp" />
@@ -104,7 +104,7 @@
                     android:layout_marginStart="8dp"
                     android:text="Malicious"
                     android:textColor="@android:color/white"
-                    android:background="@drawable/button_outline_yellow"
+                    android:background="@drawable/button_outline_red"
                     android:textStyle="bold"
                     android:textSize="10sp" />
             </LinearLayout>
