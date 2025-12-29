@@ -78,7 +78,7 @@
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:background="@drawable/button_outline_yellow"
+                        android:background="@drawable/button_outline_red"
                         android:padding="12dp">
 
                         <TextView
@@ -115,7 +115,7 @@
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:background="@drawable/button_outline_red"
+                        android:background="@drawable/button_outline_yellow"
                         android:padding="12dp">
 
                         <TextView

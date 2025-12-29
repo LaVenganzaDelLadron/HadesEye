@@ -283,18 +283,24 @@ class ScanFragment : Fragment() {
             return
         }
 
-        // Store the dialog instance
+        val context = context ?: return
+        val activity = activity ?: return
         val loading = showDialog.loadingDialog("Scanning URL")
 
         Thread {
             try {
-                val vtResult = vtScanning.vt_url_scan(requireContext(), url)
-                val usResult = urlScanning.us_url_scan(requireContext(), url)
-                val haResult = haScanning.ha_url_scan(requireContext(), url)
+                val vtResult = vtScanning.vt_url_scan(context, url)
+                val usResult = urlScanning.us_url_scan(context, url)
+                val haResult = haScanning.ha_url_scan(context, url)
+
+                // Check if fragment is still attached
+                if (!isAdded) {
+                    return@Thread
+                }
 
                 val screenshotPath = usResult["screenshot_path"]
 
-                val intent = Intent(requireContext(), ResultScanActivity::class.java).apply {
+                val intent = Intent(context, ResultScanActivity::class.java).apply {
                     putExtra("url", url)
                     putExtra("malicious", vtResult["malicious"])
                     putExtra("harmless", vtResult["harmless"])
@@ -306,16 +312,20 @@ class ScanFragment : Fragment() {
                     putExtra("screenshot_path", screenshotPath)
                 }
 
-                requireActivity().runOnUiThread {
-                    loading.dismissWithAnimation()
-                    startActivity(intent)
+                activity.runOnUiThread {
+                    if (isAdded) {
+                        loading.dismissWithAnimation()
+                        startActivity(intent)
+                    }
                 }
 
             } catch (e: Exception) {
-                requireActivity().runOnUiThread {
-                    loading.dismissWithAnimation()
-                    Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                    Log.e("ScanFragment", "Error: ${e.message}", e)
+                activity.runOnUiThread {
+                    if (isAdded) {
+                        loading.dismissWithAnimation()
+                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                        Log.e("ScanFragment", "Error: ${e.message}", e)
+                    }
                 }
             }
         }.start()
@@ -329,13 +339,20 @@ class ScanFragment : Fragment() {
             return
         }
 
+        val context = context ?: return
+        val activity = activity ?: return
         val loading = showDialog.loadingDialog("Scanning IP Address...")
         Thread {
             try {
-                val vtResult = vtScanning.vt_ip_scan(requireContext(), ip)
-                val haResult = haScanning.ha_ip_scan(requireContext(), ip)  // ✅ add Hybrid Analysis IP scan
+                val vtResult = vtScanning.vt_ip_scan(context, ip)
+                val haResult = haScanning.ha_ip_scan(context, ip)
 
-                val intent = Intent(requireContext(), ResultScanActivity::class.java).apply {
+                // Check if fragment is still attached
+                if (!isAdded) {
+                    return@Thread
+                }
+
+                val intent = Intent(context, ResultScanActivity::class.java).apply {
                     putExtra("ip", ip)
                     putExtra("malicious", vtResult["malicious"])
                     putExtra("harmless", vtResult["harmless"])
@@ -346,16 +363,20 @@ class ScanFragment : Fragment() {
                     putExtra("verdict", haResult["verdict"]?: "N/A")
                 }
 
-                requireActivity().runOnUiThread {
-                    loading.dismissWithAnimation()
-                    startActivity(intent)
+                activity.runOnUiThread {
+                    if (isAdded) {
+                        loading.dismissWithAnimation()
+                        startActivity(intent)
+                    }
                 }
 
             } catch (e: Exception) {
-                requireActivity().runOnUiThread {
-                    loading.dismissWithAnimation()
-                    Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                    Log.e("ScanFragment", "IP Scan Error: ${e.message}", e)
+                activity.runOnUiThread {
+                    if (isAdded) {
+                        loading.dismissWithAnimation()
+                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                        Log.e("ScanFragment", "IP Scan Error: ${e.message}", e)
+                    }
                 }
             }
         }.start()
@@ -368,17 +389,24 @@ class ScanFragment : Fragment() {
             return
         }
 
+        val context = context ?: return
+        val activity = activity ?: return
         val loading = showDialog.loadingDialog("Scanning Domain...")
 
         Thread {
             try {
-                val vtResult = vtScanning.vt_domain_scan(requireContext(), domain)
-                val usResult = urlScanning.us_url_scan(requireContext(), domain)
-                val haResult = haScanning.ha_domain_scan(requireContext(), domain)
+                val vtResult = vtScanning.vt_domain_scan(context, domain)
+                val usResult = urlScanning.us_url_scan(context, domain)
+                val haResult = haScanning.ha_domain_scan(context, domain)
+
+                // Check if fragment is still attached
+                if (!isAdded) {
+                    return@Thread
+                }
 
                 val screenshotPath = usResult["screenshot_path"]
 
-                val intent = Intent(requireContext(), ResultScanActivity::class.java).apply {
+                val intent = Intent(context, ResultScanActivity::class.java).apply {
                     putExtra("domain", domain)
                     putExtra("malicious", vtResult["malicious"])
                     putExtra("harmless", vtResult["harmless"])
@@ -390,16 +418,20 @@ class ScanFragment : Fragment() {
                     putExtra("screenshot_path", screenshotPath)
                 }
 
-                requireActivity().runOnUiThread {
-                    loading.dismissWithAnimation()
-                    startActivity(intent)
+                activity.runOnUiThread {
+                    if (isAdded) {
+                        loading.dismissWithAnimation()
+                        startActivity(intent)
+                    }
                 }
 
             } catch (e: Exception) {
-                requireActivity().runOnUiThread {
-                    loading.dismissWithAnimation()
-                    Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                    Log.e("ScanFragment", "Error: ${e.message}", e)
+                activity.runOnUiThread {
+                    if (isAdded) {
+                        loading.dismissWithAnimation()
+                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                        Log.e("ScanFragment", "Error: ${e.message}", e)
+                    }
                 }
             }
         }.start()
@@ -413,14 +445,24 @@ class ScanFragment : Fragment() {
             showDialog.invalidDialog("Error", "No file selected")
             return
         }
+        
+        val context = context ?: return
+        val activity = activity ?: return
+        val fileUri = selectedFileUri ?: return
         val loading = showDialog.loadingDialog("Scanning File...")
+        
         Thread {
             try {
-                val result = vtScanning.vt_file_scan(requireContext(), selectedFileUri)
-                val haResult = haScanning.ha_file_scan(requireContext(), selectedFileUri)
+                val result = vtScanning.vt_file_scan(context, fileUri)
+                val haResult = haScanning.ha_file_scan(context, fileUri)
 
-                val intent = Intent(requireContext(), ResultScanActivity::class.java)
-                intent.putExtra("file_name", getFileName(selectedFileUri!!))
+                // Check if fragment is still attached
+                if (!isAdded) {
+                    return@Thread
+                }
+
+                val intent = Intent(context, ResultScanActivity::class.java)
+                intent.putExtra("file_name", getFileName(fileUri))
                 intent.putExtra("malicious", result["malicious"])
                 intent.putExtra("harmless", result["harmless"])
                 intent.putExtra("suspicious", result["suspicious"])
@@ -429,17 +471,19 @@ class ScanFragment : Fragment() {
                 intent.putExtra("threat_score", haResult["threat_score"]?: "N/A")
                 intent.putExtra("verdict", haResult["verdict"] ?: "N/A")
 
-
-                requireActivity().runOnUiThread {
-                    loading.dismissWithAnimation()
-                    startActivity(intent)
+                activity.runOnUiThread {
+                    if (isAdded) {
+                        loading.dismissWithAnimation()
+                        startActivity(intent)
+                    }
                 }
 
-
             } catch (e: Exception) {
-                requireActivity().runOnUiThread {
-                    showDialog.loadingDialog("Scanning File.....").dismissWithAnimation()
-                    Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                activity.runOnUiThread {
+                    if (isAdded) {
+                        loading.dismissWithAnimation()
+                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    }
                 }
             }
         }.start()
@@ -448,9 +492,10 @@ class ScanFragment : Fragment() {
         filePickerLauncher.launch("*/*")
     }
     private fun getFileName(uri: Uri): String {
+        val ctx = context ?: return "unknown"
         var result: String? = null
         if (uri.scheme == "content") {
-            val cursor = requireContext().contentResolver.query(uri, null, null, null, null)
+            val cursor = ctx.contentResolver.query(uri, null, null, null, null)
             cursor?.use {
                 if (it.moveToFirst()) {
                     result = it.getString(it.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))

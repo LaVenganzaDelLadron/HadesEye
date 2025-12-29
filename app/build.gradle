@@ -74,6 +74,15 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
 
     implementation 'com.github.chrisbanes:PhotoView:2.3.0' //for zoom in and zoom out
+    // QR Code Scanner
+    implementation 'com.github.yuriy-budiyev:code-scanner:2.3.2'
+    
+    // PDF Export
+    implementation 'com.itextpdf:itext7-core:7.2.5'
+    
+    // Scheduled Scans (WorkManager)
+    implementation 'androidx.work:work-runtime-ktx:2.8.1'
+
 
     implementation libs.androidx.credentials
     implementation libs.androidx.credentials.play.services.auth

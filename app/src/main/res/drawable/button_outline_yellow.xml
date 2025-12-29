@@ -3,9 +3,9 @@
     <!-- Pressed state -->
     <item android:state_pressed="true">
         <shape android:shape="rectangle">
-            <solid android:color="#e69b00"/> <!-- Neon green fill when pressed -->
+            <solid android:color="#FFC107"/> <!-- Yellow fill when pressed -->
             <corners android:radius="12dp"/>
-            <stroke android:width="2dp" android:color="#e6cc00"/>
+            <stroke android:width="2dp" android:color="#FFC107"/>
         </shape>
     </item>
 
@@ -14,7 +14,7 @@
         <shape android:shape="rectangle">
             <solid android:color="@android:color/transparent"/> <!-- Transparent background -->
             <corners android:radius="12dp"/>
-            <stroke android:width="2dp" android:color="#E6b440"/> <!-- Outline -->
+            <stroke android:width="2dp" android:color="#FFC107"/> <!-- Yellow outline -->
         </shape>
     </item>
 

@@ -8,7 +8,7 @@ import com.project.hadeseye.R
 
 class ShowDialog(private val context: Context) {
 
-    var isTrue = false
+    var isTrue = true
 
     fun invalidDialog(title: String, message: String) {
         KAlertDialog(context, KAlertDialog.ERROR_TYPE, isTrue)
@@ -16,6 +16,30 @@ class ShowDialog(private val context: Context) {
             .setContentText(message)
             .setConfirmText("OK")
             .confirmButtonColor(R.color.red)
+            .setConfirmClickListener { dialog ->
+                dialog.dismissWithAnimation()
+            }
+            .show()
+    }
+
+    fun threatDialog(title: String, message: String) {
+        KAlertDialog(context, KAlertDialog.ERROR_TYPE, isTrue)
+            .setTitleText(title)
+            .setContentText(message)
+            .setConfirmText("OK")
+            .confirmButtonColor(R.color.red)
+            .setConfirmClickListener { dialog ->
+                dialog.dismissWithAnimation()
+            }
+            .show()
+    }
+
+    fun maliciousDialog(title: String, message: String) {
+        KAlertDialog(context, KAlertDialog.WARNING_TYPE, isTrue)
+            .setTitleText(title)
+            .setContentText(message)
+            .setConfirmText("OK")
+            .confirmButtonColor(R.color.yellow)
             .setConfirmClickListener { dialog ->
                 dialog.dismissWithAnimation()
             }
@@ -48,8 +72,9 @@ class ShowDialog(private val context: Context) {
     }
 
     fun loadingDialog(title: String): KAlertDialog {
-        val pDialog = KAlertDialog(context, KAlertDialog.PROGRESS_TYPE, isTrue)
+        val pDialog = KAlertDialog(context, KAlertDialog.PROGRESS_TYPE, true)
         pDialog.setTitleText(title)
+        pDialog.setCancelable(false)
         pDialog.show()
         return pDialog
     }

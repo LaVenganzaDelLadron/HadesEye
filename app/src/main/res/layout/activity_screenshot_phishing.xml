@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/primarycolor">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🖼️ Screenshot Phishing Detector"
+            android:textSize="24sp"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Analyze screenshot text for phishing indicators"
+            android:textSize="14sp"
+            android:textColor="@color/grey"
+            android:layout_marginBottom="16dp"/>
+
+        <Button
+            android:id="@+id/btnSelectImage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Select Screenshot"
+            android:backgroundTint="@color/yellow"
+            android:textColor="@color/primarycolor"
+            android:layout_marginBottom="12dp"/>
+
+        <ImageView
+            android:id="@+id/ivScreenshot"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="@drawable/history_item_bg"
+            android:scaleType="centerCrop"
+            android:layout_marginBottom="16dp"
+            android:contentDescription="Selected screenshot"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Or enter text manually:"
+            android:textSize="14sp"
+            android:textColor="@color/grey"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/etManualText"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:hint="Enter text to analyze"
+            android:textColorHint="@color/grey"
+            android:textColor="@color/white"
+            android:background="@drawable/history_item_bg"
+            android:padding="12dp"
+            android:inputType="textMultiLine"
+            android:gravity="top"
+            android:layout_marginBottom="16dp"/>
+
+        <Button
+            android:id="@+id/btnAnalyzeText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Analyze Text"
+            android:backgroundTint="@color/yellow"
+            android:textColor="@color/primarycolor"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:id="@+id/tvResults"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Results will appear here"
+            android:textSize="14sp"
+            android:textColor="@color/white"
+            android:background="@drawable/history_item_bg"
+            android:padding="12dp"
+            android:minHeight="150dp"/>
+
+    </LinearLayout>
+</ScrollView>

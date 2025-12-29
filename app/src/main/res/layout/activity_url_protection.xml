@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/primarycolor"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="🛡️ URL Protection"
+        android:textSize="24sp"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:layout_marginBottom="24dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Automatically scan URLs from clipboard"
+        android:textSize="14sp"
+        android:textColor="@color/grey"
+        android:layout_marginBottom="24dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/history_item_bg"
+        android:padding="16dp"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="24dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Enable Protection"
+            android:textSize="16sp"
+            android:textColor="@color/white"/>
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchProtection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Test the protection:"
+        android:textSize="14sp"
+        android:textColor="@color/grey"
+        android:layout_marginBottom="12dp"/>
+
+    <Button
+        android:id="@+id/btnTestUrl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Test with Sample URL"
+        android:backgroundTint="@color/yellow"
+        android:textColor="@color/primarycolor"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="\nHow it works:\n• Copy any URL to clipboard\n• App will automatically scan it\n• Notification shows if URL is safe or malicious\n• Works in background"
+        android:textSize="14sp"
+        android:textColor="@color/grey"
+        android:layout_marginTop="24dp"/>
+
+</LinearLayout>
