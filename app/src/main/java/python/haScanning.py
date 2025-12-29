@@ -1,6 +1,7 @@
 import requests
 import time
 import json
+import os
 
 HA_BASE_URL = "https://hybrid-analysis.com/api/v2"
 
@@ -26,59 +27,60 @@ def scan_url_ha(api_key, url):
 
         job_id = result.get("job_id") or result.get("sha256") or result.get("id")
         if not job_id:
-            result = {"Could not find job_id or sha256 in response."}
-            return
+            return json.dumps({"status": "error", "error": "Could not find job_id in response."})
 
         print(f"Scan started. Job ID: {job_id}")
         print(f"Report Page: https://www.hybrid-analysis.com/sample/{job_id}")
 
-        while True:
-            time.sleep(10)
+        # Poll for report with improved timeout (30 attempts * 5 seconds = 150 seconds)
+        for i in range(30):
+            time.sleep(5)
             check_resp = requests.get(f"{HA_BASE_URL}/report/{job_id}/summary", headers=headers)
+            
             if check_resp.status_code == 200:
                 summary = check_resp.json()
-
                 verdict = summary.get("verdict")
+                
                 if verdict is not None:
-                    # Scan done
                     threat_score = summary.get("threat_score", "N/A")
                     threat_level = summary.get("threat_level", "Unknown")
 
-                    result = {
-                        "threat_level": threat_level,
-                        "verdict": verdict,
-                        "threat_score": threat_score,
-                    }
-
-
+                    # Improved classification
                     if "malicious" in str(verdict).lower():
-                        result = {
-                            "threat_level": threat_level,
-                            "verdict": "⚠️ Detected as a malicious threat.",
-                            "threat_score": threat_score
-                        }
+                        final_verdict = "🔥 Detected as a malicious threat."
+                    elif "suspicious" in str(verdict).lower() or "pup" in str(verdict).lower():
+                        final_verdict = "⚠️ Detected as suspicious/potentially unwanted."
                     else:
-                        result = {
-                            "threat_level": threat_level,
-                            "verdict": "✅ No signs of phishing or malware detected.",
-                            "threat_score": threat_score
-                        }
+                        final_verdict = "✅ No signs of malware detected."
 
-                    break
-                else:
-                    result = {"⏳ Scan still processing, waiting..."}
+                    result = {
+                        "status": "completed",
+                        "threat_level": threat_level,
+                        "verdict": final_verdict,
+                        "threat_score": threat_score,
+                        "job_id": job_id
+                    }
+                    return json.dumps(result)
             elif check_resp.status_code == 404:
-                result = {"⏳ Report not ready yet..."}
+                # Report not ready yet, continue polling
+                continue
             else:
-                result = {f"⚠️ Unexpected status: {check_resp.status_code}"}
-                break
+                # Unexpected status, but continue trying
+                continue
+        
+        # If we timeout, return incomplete status
+        result = {
+            "status": "timeout",
+            "error": "Scan did not complete within timeout period",
+            "job_id": job_id
+        }
 
     except requests.exceptions.HTTPError as err:
-        result = {"HTTP Error:", err.response.text}
+        result = {"status": "error", "error": f"HTTP Error: {err.response.text}"}
     except Exception as e:
-        result = {"Exception:", e}
+        result = {"status": "error", "error": f"Exception: {str(e)}"}
 
-    return result
+    return json.dumps(result)
 
 
 
@@ -92,35 +94,47 @@ def scan_ip_ha(api_key, ip_address):
         }
 
         print(f"Scanning IP address: {ip_address}")
-
         response = requests.get(f"{HA_BASE_URL}/search/hash", headers=headers, params={"query": ip_address})
 
         if response.status_code != 200:
             result = {
                 "verdict": f"⚠️ Unable to fetch data for {ip_address}",
-                "threat_level": "N/A",
-                "threat_score": "N/A"
+                "threat_level": "Unknown",
+                "threat_score": "N/A",
+                "ip_address": ip_address
             }
-            return json.dumps(result)  # ✅ Return JSON
+            return json.dumps(result)
 
         data = response.json()
         print("Response:", json.dumps(data, indent=2))
 
-        threat_score = "N/A"
-        threat_level = "Unknown"
+        threat_score = "10"
+        threat_level = "Low"
         verdict = "✅ No known malicious activity detected."
 
+        # Analyze response for threats
         if isinstance(data, list) and len(data) > 0:
-            suspicious_count = sum(1 for item in data if "malicious" in str(item).lower())
-            if suspicious_count > 0:
-                verdict = f"⚠️ Detected in {suspicious_count} analysis reports."
+            suspicious_count = sum(1 for item in data if "malicious" in str(item).lower() or "threat" in str(item).lower())
+            
+            if suspicious_count >= 5:
+                threat_level = "Critical"
+                threat_score = "95"
+                verdict = f"🔥 IP flagged in {suspicious_count} threat reports"
+            elif suspicious_count >= 2:
                 threat_level = "High"
-                threat_score = "90"
+                threat_score = "80"
+                verdict = f"⚠️ IP detected in {suspicious_count} threat reports"
+            elif suspicious_count >= 1:
+                threat_level = "Medium"
+                threat_score = "60"
+                verdict = "⚠️ IP has suspicious activity"
             else:
                 threat_level = "Low"
                 threat_score = "10"
+                verdict = "✅ IP appears clean"
 
         result = {
+            "status": "completed",
             "ip_address": ip_address,
             "threat_level": threat_level,
             "verdict": verdict,
@@ -132,7 +146,8 @@ def scan_ip_ha(api_key, ip_address):
             "verdict": "⚠️ Network or HTTP error.",
             "error": str(e),
             "threat_level": "Unknown",
-            "threat_score": "N/A"
+            "threat_score": "N/A",
+            "ip_address": ip_address
         }
 
     except Exception as e:
@@ -140,7 +155,8 @@ def scan_ip_ha(api_key, ip_address):
             "verdict": "⚠️ Unexpected error occurred.",
             "error": str(e),
             "threat_level": "Unknown",
-            "threat_score": "N/A"
+            "threat_score": "N/A",
+            "ip_address": ip_address
         }
 
     return json.dumps(result)
@@ -151,7 +167,7 @@ def scan_file_ha(api_key, file_path):
     result = {}
     try:
         if not os.path.exists(file_path):
-            return {"error": f"File not found: {file_path}"}
+            return json.dumps({"error": f"File not found: {file_path}"})
 
         headers = {
             "User-Agent": "Falcon Sandbox",
@@ -173,57 +189,61 @@ def scan_file_ha(api_key, file_path):
 
         job_id = upload_result.get("job_id") or upload_result.get("sha256")
         if not job_id:
-            return {"error": "Could not find job_id or sha256 in response."}
+            return json.dumps({"error": "Could not find job_id or sha256 in response."})
 
         print(f"🔍 Scan started. Job ID: {job_id}")
         print(f"🌐 Report Page: https://www.hybrid-analysis.com/sample/{job_id}")
 
-        # Poll for report completion
-        while True:
-            time.sleep(20)
+        # Poll for report completion (longer timeout for file scans: 60 attempts * 5 seconds = 300 seconds)
+        for i in range(60):
+            time.sleep(5)
             check_resp = requests.get(f"{HA_BASE_URL}/report/{job_id}", headers=headers)
+            
             if check_resp.status_code == 200:
                 report = check_resp.json()
-
-                # Print once to inspect full structure
-                # (You can remove this later)
-                print(json.dumps(report, indent=2))
-
                 verdict = report.get("verdict")
-                threat_score = report.get("threat_score", "N/A")
-                threat_level = report.get("threat_level", "Unknown")
-
+                
                 if verdict is not None:
+                    threat_score = report.get("threat_score", "N/A")
+                    threat_level = report.get("threat_level", "Unknown")
+
                     if "malicious" in str(verdict).lower():
-                        result = {
-                            "file_name": os.path.basename(file_path),
-                            "verdict": "⚠️ Detected as malicious",
-                            "threat_level": threat_level,
-                            "threat_score": threat_score
-                        }
+                        final_verdict = "🔥 Detected as malicious"
+                    elif "suspicious" in str(verdict).lower() or "pup" in str(verdict).lower():
+                        final_verdict = "⚠️ Detected as suspicious"
                     else:
-                        result = {
-                            "file_name": os.path.basename(file_path),
-                            "verdict": "✅ No signs of malware detected",
-                            "threat_level": threat_level,
-                            "threat_score": threat_score
-                        }
-                    break
-                else:
-                    print("⏳ Scan still processing...")
+                        final_verdict = "✅ No signs of malware detected"
+
+                    result = {
+                        "status": "completed",
+                        "file_name": os.path.basename(file_path),
+                        "verdict": final_verdict,
+                        "threat_level": threat_level,
+                        "threat_score": threat_score,
+                        "job_id": job_id
+                    }
+                    return json.dumps(result)
             elif check_resp.status_code == 404:
-                print("⏳ Report not ready yet...")
+                # Report not ready yet
+                continue
             else:
-                print(f"⚠️ Unexpected status: {check_resp.status_code}")
-                result = {"error": f"Unexpected status: {check_resp.status_code}"}
-                break
+                # Unexpected status, continue
+                continue
+
+        # Timeout
+        result = {
+            "status": "timeout",
+            "file_name": os.path.basename(file_path),
+            "error": "File scan did not complete within timeout",
+            "job_id": job_id
+        }
 
     except requests.exceptions.HTTPError as err:
-        result = {"error": "HTTP Error", "details": err.response.text}
+        result = {"status": "error", "error": "HTTP Error", "details": err.response.text}
     except Exception as e:
-        result = {"error": "Exception occurred", "details": str(e)}
+        result = {"status": "error", "error": "Exception occurred", "details": str(e)}
 
-    return result
+    return json.dumps(result)
 
 
 def scan_domain_ha(api_key, domain):
@@ -237,8 +257,6 @@ def scan_domain_ha(api_key, domain):
 
         print(f"Scanning domain: {domain}")
 
-        # Hybrid Analysis does not have a direct /domain endpoint
-        # but we can use the /search/terms endpoint to look for reputation data
         response = requests.get(
             f"{HA_BASE_URL}/search/terms",
             headers=headers,
@@ -249,7 +267,7 @@ def scan_domain_ha(api_key, domain):
             result = {
                 "domain": domain,
                 "verdict": f"⚠️ Unable to fetch data for {domain}",
-                "threat_level": "N/A",
+                "threat_level": "Unknown",
                 "threat_score": "N/A"
             }
             return json.dumps(result)
@@ -257,8 +275,8 @@ def scan_domain_ha(api_key, domain):
         data = response.json()
         print("Response:", json.dumps(data, indent=2))
 
-        threat_score = "N/A"
-        threat_level = "Unknown"
+        threat_score = "10"
+        threat_level = "Low"
         verdict = "✅ No malicious activity detected."
 
         # Analyze data for malicious indicators
@@ -270,11 +288,11 @@ def scan_domain_ha(api_key, domain):
                 threat_level = "Critical"
                 verdict = f"🔥 Domain flagged as malicious ({malicious_count} reports)"
                 threat_score = "95"
-            elif malicious_count >= 2 or suspicious_count >= 1:
+            elif malicious_count >= 2 or suspicious_count >= 2:
                 threat_level = "High"
                 verdict = f"⚠️ Domain possibly a threat ({malicious_count} malicious, {suspicious_count} suspicious)"
                 threat_score = "80"
-            elif suspicious_count == 1:
+            elif malicious_count >= 1 or suspicious_count >= 1:
                 threat_level = "Medium"
                 verdict = "⚠️ Domain has suspicious activity"
                 threat_score = "60"
@@ -284,6 +302,7 @@ def scan_domain_ha(api_key, domain):
                 threat_score = "10"
 
         result = {
+            "status": "completed",
             "domain": domain,
             "threat_level": threat_level,
             "verdict": verdict,

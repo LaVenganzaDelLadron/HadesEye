@@ -1,6 +1,7 @@
 import os
 import time
 import requests
+import json
 
 US_BASE_URL = "https://urlscan.io/api/v1"
 
@@ -22,17 +23,35 @@ def scan_url(api_key, url):
         if data.get("message") == "Submission successful":
             uuid = data["uuid"]
 
-            # Wait for result
+            # Wait for result (longer timeout - up to 75 seconds with 5 second intervals)
             for i in range(15):
+                time.sleep(5)
                 res = requests.get(f"{US_BASE_URL}/result/{uuid}", headers=headers)
                 if res.status_code == 200:
                     result_data = res.json()
                     page_info = result_data.get("page", {})
+                    
+                    # Get stats for more accurate classification
+                    stats = result_data.get("stats", {})
+                    malicious = stats.get("malicious", 0)
+                    suspicious = stats.get("suspicious", 0)
+                    
+                    # Build verdict
+                    if malicious >= 3:
+                        verdict = "🔥 Malicious - Multiple vendors detected threats"
+                    elif malicious >= 1 or suspicious >= 2:
+                        verdict = "⚠️ Suspicious - Some vendors flagged concerns"
+                    else:
+                        verdict = "✅ Safe - No significant threats detected"
+                    
                     result = {
                         "status": "completed",
                         "uuid": uuid,
                         "title": page_info.get("title", "N/A"),
                         "domain": page_info.get("domain", "N/A"),
+                        "malicious": str(malicious),
+                        "suspicious": str(suspicious),
+                        "verdict": verdict,
                         "report_url": f"https://urlscan.io/result/{uuid}/",
                     }
 
@@ -46,11 +65,14 @@ def scan_url(api_key, url):
                         result["screenshot_path"] = file_path
                     else:
                         result["screenshot_path"] = "Not available"
-                    break
+                    
+                    return json.dumps(result)
                 else:
-                    time.sleep(5)
-            else:
-                result = {"status": "timeout", "message": "Scan not completed after waiting"}
+                    # Still processing, continue polling
+                    continue
+            
+            # Timeout after 75 seconds
+            result = {"status": "timeout", "message": "Scan not completed after waiting", "uuid": uuid}
 
         else:
             result = {"status": "failed", "message": data.get("message", "Unknown error")}
@@ -58,4 +80,4 @@ def scan_url(api_key, url):
     except Exception as e:
         result = {"status": "error", "message": str(e)}
 
-    return result
+    return json.dumps(result)
